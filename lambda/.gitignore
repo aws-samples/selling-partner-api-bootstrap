@@ -1,0 +1,9 @@
+.idea/
+.gradle/
+build/
+gradle/
+
+*.iml
+gradlew
+gradlew.bat
+src/main/java/cn/amazon/aws/rp/spapi/dynamodb/NeverCommitNeverCommit.java
