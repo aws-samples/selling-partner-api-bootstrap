@@ -17,6 +17,8 @@ The value of the credentials can be found from the following picture.
 
 Separate `README.md` are included in each sub-folder.
 
+### Chinese version Workshop
+A Chinese version SP-API workshop can be found [here](https://www.spapi.org.cn/ ).
 
 ## Contribute
 Pull requests and issue reports are welcome.
