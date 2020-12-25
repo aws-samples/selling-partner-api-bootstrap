@@ -7,6 +7,7 @@ import cn.amazon.aws.rp.spapi.dynamodb.entity.SpApiTask;
 import cn.amazon.aws.rp.spapi.enums.DateType;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
 import cn.amazon.aws.rp.spapi.utils.DateUtil;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -122,7 +123,7 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 
 	public static String getTaskTableName() {
 		// Update the table name from environment. It is expected to be set by CDK script on Lambda.
-		final String tableName = System.getenv("DYNAMODB_TASK_TABLE");
+		final String tableName = Utils.getEnv("DYNAMODB_TASK_TABLE");
 		if (tableName != null) {
 			TABLE_NAME = tableName;
 		}

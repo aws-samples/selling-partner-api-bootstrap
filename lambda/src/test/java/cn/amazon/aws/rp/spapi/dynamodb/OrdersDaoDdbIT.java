@@ -3,11 +3,13 @@ package cn.amazon.aws.rp.spapi.dynamodb;
 import cn.amazon.aws.rp.spapi.clients.model.Order;
 import cn.amazon.aws.rp.spapi.clients.model.OrderList;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.OrdersDao;
+import org.junit.Ignore;
 import org.junit.Test;
 
-public class OrdersDaoDdbTest {
+public class OrdersDaoDdbIT {
 
     @Test
+    @Ignore
     public void put() {
         final OrdersDao ordersDaoDdb = new OrdersDao();
         Order o1 = new Order();

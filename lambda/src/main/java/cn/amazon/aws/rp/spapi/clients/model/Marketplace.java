@@ -13,6 +13,7 @@
 
 package cn.amazon.aws.rp.spapi.clients.model;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
 import com.google.gson.annotations.SerializedName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -22,8 +23,10 @@ import java.util.Objects;
 /**
  * Detailed information about an Amazon market where a seller can list items for sale and customers can view and purchase items.
  */
+//TODO:: define a dto
 @ApiModel(description = "Detailed information about an Amazon market where a seller can list items for sale and customers can view and purchase items.")
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2020-10-12T16:51:35.500+08:00")
+@DynamoDBDocument
 public class Marketplace {
   @SerializedName("id")
   private String id = null;

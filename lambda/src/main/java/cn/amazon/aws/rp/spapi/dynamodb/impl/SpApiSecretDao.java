@@ -1,21 +1,28 @@
 package cn.amazon.aws.rp.spapi.dynamodb.impl;
 
 import cn.amazon.aws.rp.spapi.dynamodb.ISpApiSecretDao;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerSecretsVO;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Samples for more operations - https://github.com/awsdocs/aws-doc-sdk-examples/tree/master/java/example_code/dynamodb/src/main/java/aws/example/dynamodb
@@ -23,7 +30,7 @@ import java.util.Set;
 public class SpApiSecretDao implements ISpApiSecretDao {
 
     private static final Logger logger = LoggerFactory.getLogger(SpApiSecretDao.class);
-    private static final AmazonDynamoDB DDB = AmazonDynamoDBClientBuilder.standard().build();
+    private static final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
     public static String TABLE_NAME = "spapi-secrets";
     private static String TABLE_PKEY = "seller_id";
 
@@ -44,7 +51,7 @@ public class SpApiSecretDao implements ISpApiSecretDao {
         final GetItemRequest request = new GetItemRequest().withKey(key_to_get).withTableName(TABLE_NAME);
 
         try {
-            Map<String, AttributeValue> returned_item = DDB.getItem(request).getItem();
+            Map<String, AttributeValue> returned_item = client.getItem(request).getItem();
             if (returned_item != null) {
                 Set<String> keys = returned_item.keySet();
                 for (String key : keys) {
@@ -62,27 +69,48 @@ public class SpApiSecretDao implements ISpApiSecretDao {
     }
 
     @Override
-    public SellerSecretsVO getSecretsVOForSeller(String sellerId) {
+    public SellerCredentials getSecretsVOForSeller(String sellerId) {
         logger.info("enter");
-        final DynamoDBMapper dbm = new DynamoDBMapper(DDB);
-        return dbm.load(SellerSecretsVO.class, sellerId);
+        final DynamoDBMapper dbm = new DynamoDBMapper(client);
+        return dbm.load(SellerCredentials.class, sellerId);
     }
 
     @Override
-    public List<SellerSecretsVO> getSecretsVOForAllSeller() {
+    public List<SellerCredentials> getSecretsVOForAllSeller() {
         logger.info("enter");
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-        final DynamoDBMapper dbm = new DynamoDBMapper(DDB);
-        return dbm.scan(SellerSecretsVO.class, scanExpression);
+        final DynamoDBMapper dbm = new DynamoDBMapper(client);
+        return dbm.scan(SellerCredentials.class, scanExpression);
+    }
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    @Override
+    public void updateSellerCredentials(SellerCredentials sellerCredentials) {
+        DynamoDBMapper mapper = new DynamoDBMapper(client);
+        mapper.save(sellerCredentials);
     }
 
     public static String getSellerSecretsTableName() {
         // Update the table name from environment. It is expected to be set by CDK script on Lambda.
-        final String tableName = System.getenv("DYNAMODB_SECRETS_TABLE");
+        final String tableName = Utils.getEnv("DYNAMODB_SECRETS_TABLE");
         if (tableName != null) {
             TABLE_NAME = tableName;
         }
         return TABLE_NAME;
+    }
+
+    private static final ISpApiSecretDao secretsDao = new SpApiSecretDao();
+
+    public static List<SellerCredentials> getSellerCredentials() {
+        // Concurrent invocation for all sellers - still constrained by underline number of threads.
+        final List<SellerCredentials> secretsVOForAllSeller = secretsDao.getSecretsVOForAllSeller();
+        logger.info("found seller size: " + secretsVOForAllSeller.size());
+        return secretsVOForAllSeller;
+    }
+
+    public static void updateMarketplace(SellerCredentials sellerCredentials) {
+        // Concurrent invocation for all sellers - still constrained by underline number of threads.
+         secretsDao.updateSellerCredentials(sellerCredentials);
     }
 
 }

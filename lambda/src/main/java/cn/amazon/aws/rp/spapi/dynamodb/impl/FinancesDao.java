@@ -1,12 +1,14 @@
 package cn.amazon.aws.rp.spapi.dynamodb.impl;
 
 import cn.amazon.aws.rp.spapi.clients.model.FinancialEvents;
+import cn.amazon.aws.rp.spapi.clients.model.Marketplace;
 import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipation;
 import cn.amazon.aws.rp.spapi.clients.model.ShipmentEvent;
 import cn.amazon.aws.rp.spapi.dynamodb.IFinancesDao;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerSecretsVO;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SpApiTask;
 import cn.amazon.aws.rp.spapi.enums.ShipmentType;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -50,33 +52,33 @@ public class FinancesDao implements IFinancesDao {
 	}
 
 	@Override
-	public void put(List<FinancialEvents> financialEventsList, MarketplaceParticipation marketplace, SellerSecretsVO sellerSecretsVO, SpApiTask apiTask) {
+	public void put(List<FinancialEvents> financialEventsList, Marketplace marketplace, SellerCredentials sellerCredentials, SpApiTask apiTask) {
 		financialEventsList.forEach(financialEvents -> {
 			// 1, 保存shipmentEvents
 			financialEvents.getShipmentEventList().forEach(shipmentEvent -> {
-				putShipmentEvent(shipmentEvent, marketplace, sellerSecretsVO.getSeller_id(), ShipmentType.shipment.name(), apiTask);
+				putShipmentEvent(shipmentEvent, marketplace, sellerCredentials.getSeller_id(), ShipmentType.shipment.name(), apiTask);
 			});
 			// 2, 保存refundEvents
 			financialEvents.getRefundEventList().forEach(refundEvent -> {
-				putShipmentEvent(refundEvent, marketplace, sellerSecretsVO.getSeller_id(), ShipmentType.refund.name(), apiTask);
+				putShipmentEvent(refundEvent, marketplace, sellerCredentials.getSeller_id(), ShipmentType.refund.name(), apiTask);
 			});
 			// 3, 保存guaranteeClaimEvents
 			financialEvents.getGuaranteeClaimEventList().forEach(guaranteeClaimEvent -> {
-				putShipmentEvent(guaranteeClaimEvent, marketplace, sellerSecretsVO.getSeller_id(), ShipmentType.guaranteeClaim.name(), apiTask);
+				putShipmentEvent(guaranteeClaimEvent, marketplace, sellerCredentials.getSeller_id(), ShipmentType.guaranteeClaim.name(), apiTask);
 			});
 			// 4, 保存chargebackEvents
 			financialEvents.getChargebackEventList().forEach(chargebackEvent -> {
-				putShipmentEvent(chargebackEvent, marketplace, sellerSecretsVO.getSeller_id(), ShipmentType.chargeback.name(), apiTask);
+				putShipmentEvent(chargebackEvent, marketplace, sellerCredentials.getSeller_id(), ShipmentType.chargeback.name(), apiTask);
 			});
 		});
 	}
 
-	private void putShipmentEvent(ShipmentEvent shipmentEvent, MarketplaceParticipation marketplace, String sellerId, String shipmentType, SpApiTask apiTask) {
+	private void putShipmentEvent(ShipmentEvent shipmentEvent, Marketplace marketplace, String sellerId, String shipmentType, SpApiTask apiTask) {
 		try {
 			final PutItemOutcome putResult = table.putItem(new Item()
 					.withPrimaryKey(TABLE_P_KEY, shipmentEvent.getAmazonOrderId(), TABLE_SORT_KEY, sellerId)
-					.withString("countryCode", marketplace.getMarketplace().getCountryCode())
-					.withString("marketplaceId", marketplace.getMarketplace().getId())
+					.withString("countryCode", marketplace.getCountryCode())
+					.withString("marketplaceId", marketplace.getId())
 					.withString("shipmentType", shipmentType)
 					.withString("queryStartTime", apiTask.getStartTime())
 					.withString("queryEndTime", apiTask.getEndTime())
@@ -90,7 +92,7 @@ public class FinancesDao implements IFinancesDao {
 
 	public static String updateTableName() {
 		// Update the table name from environment. It is expected to be set by CDK script on Lambda.
-		final String tableName = System.getenv("DYNAMODB_FINANCES_TABLE");
+		final String tableName = Utils.getEnv("DYNAMODB_FINANCES_TABLE");
 		if (tableName != null) {
 			TABLE_NAME = tableName;
 		}

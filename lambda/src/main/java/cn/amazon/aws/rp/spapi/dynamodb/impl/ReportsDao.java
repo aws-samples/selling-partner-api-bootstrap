@@ -2,8 +2,9 @@ package cn.amazon.aws.rp.spapi.dynamodb.impl;
 
 import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipation;
 import cn.amazon.aws.rp.spapi.dynamodb.IReportsDao;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerSecretsVO;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.enums.ReportStatusEnum;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -40,10 +41,10 @@ public class ReportsDao implements IReportsDao {
      */
 
     @Override
-    public void put(String reportId, MarketplaceParticipation marketplace, SellerSecretsVO sellerSecretsVO) {
+    public void put(String reportId, MarketplaceParticipation marketplace, SellerCredentials sellerCredentials) {
         try {
             final PutItemOutcome putResult = table.putItem(new Item()
-                    .withPrimaryKey(TABLE_P_KEY, reportId, TABLE_SORT_KEY, sellerSecretsVO.getSeller_id())
+                    .withPrimaryKey(TABLE_P_KEY, reportId, TABLE_SORT_KEY, sellerCredentials.getSeller_id())
                     .withString("countryCode", marketplace.getMarketplace().getCountryCode())
                     .withString("marketplaceId", marketplace.getMarketplace().getId())
                     .withString("reportStatus", ReportStatusEnum.IN_PROGRESS.name())
@@ -56,7 +57,7 @@ public class ReportsDao implements IReportsDao {
 
     private static String updateTableName() {
         // Update the table name from environment. It is expected to be set by CDK script on Lambda.
-        final String tableName = System.getenv("DYNAMODB_REPORTS_TABLE");
+        final String tableName = Utils.getEnv("DYNAMODB_REPORTS_TABLE");
         if (tableName != null) {
             TABLE_NAME = tableName;
         }

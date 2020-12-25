@@ -15,7 +15,7 @@ package cn.amazon.aws.rp.spapi.clients.api;
 
 import cn.amazon.aws.rp.spapi.clients.*;
 import cn.amazon.aws.rp.spapi.clients.model.ListFinancialEventGroupsResponse;
-import com.amazon.SellingPartnerAPIAA.*;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import com.google.gson.reflect.TypeToken;
 import cn.amazon.aws.rp.spapi.clients.model.ListFinancialEventsResponse;
 import org.threeten.bp.OffsetDateTime;
@@ -591,81 +591,18 @@ public class FinancesApi {
         return call;
     }
 
-    public static class Builder {
-        private AWSAuthenticationCredentials awsAuthenticationCredentials;
-        private LWAAuthorizationCredentials lwaAuthorizationCredentials;
-        private String endpoint;
-        private LWAAccessTokenCache lwaAccessTokenCache;
-        private Boolean disableAccessTokenCache = false;
-        private AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider;
+    public static class Builder extends SPAPIBuilder<FinancesApi> {
 
-        public Builder awsAuthenticationCredentials(AWSAuthenticationCredentials awsAuthenticationCredentials) {
-            this.awsAuthenticationCredentials = awsAuthenticationCredentials;
-            return this;
+        @Override
+        public FinancesApi build(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
+            buildAuth(jsonSellerSecrets);
+            return new FinancesApi(apiClient);
         }
 
-        public Builder lwaAuthorizationCredentials(LWAAuthorizationCredentials lwaAuthorizationCredentials) {
-            this.lwaAuthorizationCredentials = lwaAuthorizationCredentials;
-            return this;
-        }
+    }
 
-        public Builder endpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
-        
-        public Builder lwaAccessTokenCache(LWAAccessTokenCache lwaAccessTokenCache) {
-            this.lwaAccessTokenCache = lwaAccessTokenCache;
-            return this;
-        }
-		
-	   public Builder disableAccessTokenCache() {
-            this.disableAccessTokenCache = true;
-            return this;
-        }
-        
-        public Builder awsAuthenticationCredentialsProvider(AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider) {
-            this.awsAuthenticationCredentialsProvider = awsAuthenticationCredentialsProvider;
-            return this;
-        }
-        
-
-        public FinancesApi build() {
-            if (awsAuthenticationCredentials == null) {
-                throw new RuntimeException("AWSAuthenticationCredentials not set");
-            }
-
-            if (lwaAuthorizationCredentials == null) {
-                throw new RuntimeException("LWAAuthorizationCredentials not set");
-            }
-
-            if (StringUtil.isEmpty(endpoint)) {
-                throw new RuntimeException("Endpoint not set");
-            }
-
-            AWSSigV4Signer awsSigV4Signer;
-            if ( awsAuthenticationCredentialsProvider == null) {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials);
-            }
-            else {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials,awsAuthenticationCredentialsProvider);
-            }
-            
-            LWAAuthorizationSigner lwaAuthorizationSigner = null;            
-            if (disableAccessTokenCache) {
-                lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials);
-            }
-            else {
-                if (lwaAccessTokenCache == null) {
-                    lwaAccessTokenCache = new LWAAccessTokenCacheImpl();                  
-                 }
-                 lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials,lwaAccessTokenCache);
-            }
-
-            return new FinancesApi(new ApiClient()
-                .setAWSSigV4Signer(awsSigV4Signer)
-                .setLWAAuthorizationSigner(lwaAuthorizationSigner)
-                .setBasePath(endpoint));
-        }
+    public static FinancesApi buildFinancesApi(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
+        return (new FinancesApi.Builder())
+                .build(jsonSellerSecrets);
     }
 }

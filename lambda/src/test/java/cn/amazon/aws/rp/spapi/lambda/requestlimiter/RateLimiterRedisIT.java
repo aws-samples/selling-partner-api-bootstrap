@@ -1,11 +1,13 @@
 package cn.amazon.aws.rp.spapi.lambda.requestlimiter;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Require to set environment variable REDIS_URL=127.0.0.1 and stat a redis.
  */
-public class RateLimiterRedisTest {
+@Ignore
+public class RateLimiterRedisIT {
 
     @Test
     public void acquirePermit() {

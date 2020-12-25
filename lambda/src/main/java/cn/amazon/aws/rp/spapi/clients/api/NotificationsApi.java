@@ -13,7 +13,10 @@
 
 package cn.amazon.aws.rp.spapi.clients.api;
 
+import cn.amazon.aws.rp.spapi.aa.LWAAuthorizationCredentials;
+import cn.amazon.aws.rp.spapi.aa.ScopeConstants;
 import cn.amazon.aws.rp.spapi.clients.*;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -35,14 +38,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.amazon.SellingPartnerAPIAA.AWSAuthenticationCredentials;
-import com.amazon.SellingPartnerAPIAA.AWSAuthenticationCredentialsProvider;
-import com.amazon.SellingPartnerAPIAA.AWSSigV4Signer;
-import com.amazon.SellingPartnerAPIAA.LWAAccessTokenCache;
-import com.amazon.SellingPartnerAPIAA.LWAAccessTokenCacheImpl;
-import com.amazon.SellingPartnerAPIAA.LWAAuthorizationCredentials;
-import com.amazon.SellingPartnerAPIAA.LWAAuthorizationSigner;
 
 public class NotificationsApi {
     private ApiClient apiClient;
@@ -1066,81 +1061,56 @@ public class NotificationsApi {
         return call;
     }
 
-    public static class Builder {
-        private AWSAuthenticationCredentials awsAuthenticationCredentials;
-        private LWAAuthorizationCredentials lwaAuthorizationCredentials;
-        private String endpoint;
-        private LWAAccessTokenCache lwaAccessTokenCache;
-        private Boolean disableAccessTokenCache = false;
-        private AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider;
+    public static class Builder extends SPAPIBuilder<NotificationsApi> {
 
-        public Builder awsAuthenticationCredentials(AWSAuthenticationCredentials awsAuthenticationCredentials) {
-            this.awsAuthenticationCredentials = awsAuthenticationCredentials;
-            return this;
+        @Override
+        public NotificationsApi build(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
+            buildAuth(jsonSellerSecrets);
+            return new NotificationsApi(apiClient);
+        }
+    }
+
+    public static class GrantLessBuilder extends SPAPIBuilder<NotificationsApi> {
+
+        @Override
+        public NotificationsApi build(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
+            buildAuth(jsonSellerSecrets);
+            return new NotificationsApi(apiClient);
         }
 
-        public Builder lwaAuthorizationCredentials(LWAAuthorizationCredentials lwaAuthorizationCredentials) {
-            this.lwaAuthorizationCredentials = lwaAuthorizationCredentials;
-            return this;
+        @Override
+        protected LWAAuthorizationCredentials getLwaAuthorizationCredentials(SellerCredentials jsonSellerSecrets) {
+            return LWAAuthorizationCredentials
+                    .builder()
+                    .clientId(this.lwaCredentials.getClientId())
+                    .clientSecret(this.lwaCredentials.getClientSecret())
+                    .withScope(ScopeConstants.SCOPE_NOTIFICATIONS_API) // No refresh token is needed.
+                    .endpoint("https://api.amazon.com/auth/o2/token")
+                    .build();
         }
+    }
 
-        public Builder endpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
-        
-        public Builder lwaAccessTokenCache(LWAAccessTokenCache lwaAccessTokenCache) {
-            this.lwaAccessTokenCache = lwaAccessTokenCache;
-            return this;
-        }
-		
-	   public Builder disableAccessTokenCache() {
-            this.disableAccessTokenCache = true;
-            return this;
-        }
-        
-        public Builder awsAuthenticationCredentialsProvider(AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider) {
-            this.awsAuthenticationCredentialsProvider = awsAuthenticationCredentialsProvider;
-            return this;
-        }
-        
+    /**
+     * Notification API uses the scope instead of the authorization code.
+     * The Selling Partner API scopes can be retrieved from the ScopeConstants class and passed as argument(s) to either the withScope(String scope) or withScopes(String... scopes) method during lwaAuthorizationCredentials object instantiation.
+     * <p>
+     * import static com.amazon.SellingPartnerAPIAA.ScopeConstants.SCOPE_NOTIFICATIONS_API;
+     * <p>
+     * LWAAuthorizationCredentials lwaAuthorizationCredentials = LWAAuthorizationCredentials.builder()
+     * .clientId("...")
+     * .clientSecret("...")
+     * .withScopes("...")
+     * .endpoint("...")
+     * .build();
+     */
+    public static NotificationsApi buildNotificationGrantLessApi(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
 
-        public NotificationsApi build() {
-            if (awsAuthenticationCredentials == null) {
-                throw new RuntimeException("AWSAuthenticationCredentials not set");
-            }
+        return (new NotificationsApi.Builder())
+                .build(jsonSellerSecrets);
+    }
 
-            if (lwaAuthorizationCredentials == null) {
-                throw new RuntimeException("LWAAuthorizationCredentials not set");
-            }
-
-            if (StringUtil.isEmpty(endpoint)) {
-                throw new RuntimeException("Endpoint not set");
-            }
-
-            AWSSigV4Signer awsSigV4Signer;
-            if ( awsAuthenticationCredentialsProvider == null) {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials);
-            }
-            else {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials,awsAuthenticationCredentialsProvider);
-            }
-            
-            LWAAuthorizationSigner lwaAuthorizationSigner = null;            
-            if (disableAccessTokenCache) {
-                lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials);
-            }
-            else {
-                if (lwaAccessTokenCache == null) {
-                    lwaAccessTokenCache = new LWAAccessTokenCacheImpl();                  
-                 }
-                 lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials,lwaAccessTokenCache);
-            }
-
-            return new NotificationsApi(new ApiClient()
-                .setAWSSigV4Signer(awsSigV4Signer)
-                .setLWAAuthorizationSigner(lwaAuthorizationSigner)
-                .setBasePath(endpoint));
-        }
+    public static NotificationsApi buildNotificationApi(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
+        return (new NotificationsApi.GrantLessBuilder())
+                .build(jsonSellerSecrets);
     }
 }

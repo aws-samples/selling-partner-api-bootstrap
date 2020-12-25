@@ -10,7 +10,8 @@ import cn.amazon.aws.rp.spapi.dynamodb.IReportsDao;
 import cn.amazon.aws.rp.spapi.dynamodb.ISpApiTaskDao;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SpApiTask;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.ReportsDao;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerSecretsVO;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
+import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
 import cn.amazon.aws.rp.spapi.enums.ReportTypeEnum;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
@@ -41,14 +42,13 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 
 	private static final Logger logger = LoggerFactory.getLogger(FulfilledShipmentsRequestReport.class);
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-	private Map<String, SellersApi> sellerApiHolder;
+
 	private Map<String, ReportsApi> reportsApiHolder;
 
 	private IReportsDao reportsDao;
 	private ISpApiTaskDao spApiTaskDao;
 
 	public FulfilledShipmentsRequestReport() {
-		sellerApiHolder = new HashMap<>();
 		reportsApiHolder = new HashMap<>();
 		reportsDao = new ReportsDao();
 		spApiTaskDao = new SpApiTaskDao();
@@ -60,14 +60,14 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 //		SellerSecretsVO sellerSecretsVO = gson.fromJson(jsonSellerSecrets, SellerSecretsVO.class);
 		Helper.logInput(logger, jsonSellerSecrets, context, gson);
 		//get seller
-		List<SellerSecretsVO> secretsVOS = Helper.getSellerSecretsVOS();
-		if (secretsVOS.isEmpty()) {
+		List<SellerCredentials> sellerCredentials = SpApiSecretDao.getSellerCredentials();
+		if (sellerCredentials.isEmpty()) {
 			return SpApiConstants.SUCCESS;
 		}
 
-		secretsVOS.forEach(sellerSecretsVO -> {
+		sellerCredentials.forEach(credentials -> {
 			try {
-				final String sellerKey = sellerSecretsVO.getSeller_id() + "_" + StatusEnum.INIT.getStatus() + "_" + TaskConstants.FULFILLED_SHIPMENT_REQUEST_REPORT;
+				final String sellerKey = credentials.getSeller_id() + "_" + StatusEnum.INIT.getStatus() + "_" + TaskConstants.FULFILLED_SHIPMENT_REQUEST_REPORT;
 				//get task
 				List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerKey);
 				if (spApiTaskList.isEmpty()) {
@@ -75,10 +75,10 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 				}
 				SpApiTask apiTask = spApiTaskList.stream().findFirst().get();
 				//get marketPlace
-				final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipation = getMarketplaceParticipations(sellerSecretsVO);
+				final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipation = SellersApi.getMarketplaceParticipations(credentials);
 				final MarketplaceParticipationList payloadList = marketplaceParticipation.getData().getPayload();
 				payloadList.stream().forEach(participation -> {
-					requestReportsForOneMkt(participation, sellerSecretsVO, apiTask);
+					requestReportsForOneMkt(participation, credentials, apiTask);
 				});
 			} catch (Throwable throwable) {
 				logger.error("Api call failed", throwable);
@@ -87,15 +87,15 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 		return SpApiConstants.SUCCESS;
 	}
 
-	private void requestReportsForOneMkt(MarketplaceParticipation marketplace, SellerSecretsVO sellerSecretsVO, SpApiTask apiTask) {
-		reportsDao.put(getReportsListForTimeDelta(sellerSecretsVO, apiTask), marketplace, sellerSecretsVO);
+	private void requestReportsForOneMkt(MarketplaceParticipation marketplace, SellerCredentials sellerCredentials, SpApiTask apiTask) {
+		reportsDao.put(getReportsListForTimeDelta(sellerCredentials, apiTask), marketplace, sellerCredentials);
 	}
 
-	private String getReportsListForTimeDelta(SellerSecretsVO secretsVO, SpApiTask apiTask) {
+	private String getReportsListForTimeDelta(SellerCredentials sellerCredentials, SpApiTask apiTask) {
 		logger.info("enter");
 		try {
 			final HashMap<String, Object> input = new HashMap<>();
-			final ReportsApi reportsApi = getOrCreateReportsApi(secretsVO);
+			final ReportsApi reportsApi = getOrCreateReportsApi(sellerCredentials);
 //			final String from = Helper.getIso8601Time(7000);
 			final String from = apiTask.getStartTime();
 			input.put("startTime", from);
@@ -103,7 +103,7 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 			input.put("endTime", to);
 			input.put("reportType", ReportTypeEnum._GET_AMAZON_FULFILLED_SHIPMENTS_DATA_.name());
 			logger.info(String.format("checking from %s to %s", from, to));
-			final ApiResponse<CreateReportResponse> createReportResponse = apiProxyInvokeForReports(secretsVO, reportsApi, input);
+			final ApiResponse<CreateReportResponse> createReportResponse = apiProxyInvokeForReports(sellerCredentials, reportsApi, input);
 			return createReportResponse.getData().getPayload().getReportId();
 		} catch (Throwable e) {
 			logger.error("invocation of report:{} api failed.", ReportTypeEnum._GET_AMAZON_FULFILLED_SHIPMENTS_DATA_.name(), e);
@@ -111,7 +111,7 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 		return null;
 	}
 
-	private ApiResponse<CreateReportResponse> apiProxyInvokeForReports(SellerSecretsVO secretsVO, ReportsApi reportsApi, HashMap<String, Object> input) throws Throwable {
+	private ApiResponse<CreateReportResponse> apiProxyInvokeForReports(SellerCredentials secretsVO, ReportsApi reportsApi, HashMap<String, Object> input) throws Throwable {
 
 		// Invoke with API proxy
 		final FulfilledShipmentsRequestReportApiInvoker reportApiInvoker = new FulfilledShipmentsRequestReportApiInvoker(reportsApi);
@@ -121,37 +121,14 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 		return apiProxy.invkWithToken(input, secretsVO.getSeller_id());
 	}
 
-	private ApiResponse<GetMarketplaceParticipationsResponse> getMarketplaceParticipations(SellerSecretsVO secretsVO) throws Throwable {
-
-		// Seller API is per Seller - they have different secrets.
-		final SellersApi sellersApi = getOrCreateSellersApi(secretsVO);
-
-		final SellerGetMarketParticipation getMarketParticipation = new SellerGetMarketParticipation(sellersApi);
-		final ApiProxy<GetMarketplaceParticipationsResponse> apiProxy = new ApiProxy<>(getMarketParticipation);
-		final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipationsWithHttpInfo
-				= apiProxy.invkWithToken(null, secretsVO.getSeller_id()); // No parameters are needed.
-		logger.debug("Server responded.");
-		return marketplaceParticipationsWithHttpInfo;
-
-	}
-
-	private ReportsApi getOrCreateReportsApi(SellerSecretsVO secretsVO) {
-		ReportsApi api = reportsApiHolder.get(Integer.toHexString(secretsVO.hashCode()));
+	private ReportsApi getOrCreateReportsApi(SellerCredentials sellerCredentials) throws NoSuchFieldException, IllegalAccessException {
+		ReportsApi api = reportsApiHolder.get(Integer.toHexString(sellerCredentials.hashCode()));
 		if (api == null) {
-			api = Helper.buildReportsApi(secretsVO);
-			reportsApiHolder.put(Integer.toHexString(secretsVO.hashCode()), api);
+			api = ReportsApi.buildReportsApi(sellerCredentials);
+			reportsApiHolder.put(Integer.toHexString(sellerCredentials.hashCode()), api);
 			logger.info("Reports API client created.");
 		}
 		return api;
 	}
 
-	private SellersApi getOrCreateSellersApi(SellerSecretsVO secretsVO) {
-		SellersApi api = sellerApiHolder.get(Integer.toHexString(secretsVO.hashCode()));
-		if (api == null) {
-			api = Helper.buildSellerApi(secretsVO);
-			sellerApiHolder.put(Integer.toHexString(secretsVO.hashCode()), api);
-			logger.info("Seller API client created.");
-		}
-		return api;
-	}
 }

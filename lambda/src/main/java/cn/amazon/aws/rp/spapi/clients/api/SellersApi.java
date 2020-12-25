@@ -15,8 +15,12 @@ package cn.amazon.aws.rp.spapi.clients.api;
 
 import cn.amazon.aws.rp.spapi.clients.*;
 import cn.amazon.aws.rp.spapi.clients.model.GetMarketplaceParticipationsResponse;
-import com.amazon.SellingPartnerAPIAA.*;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
+import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
+import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
 import com.google.gson.reflect.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -27,6 +31,7 @@ import java.util.Map;
 
 public class SellersApi {
     private ApiClient apiClient;
+    private static final Logger logger = LoggerFactory.getLogger(SellersApi.class);
 
     SellersApi() {
         // TODO why not provide the credentials?
@@ -36,6 +41,8 @@ public class SellersApi {
     public SellersApi(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
+
+
 
     public ApiClient getApiClient() {
         return apiClient;
@@ -165,81 +172,49 @@ public class SellersApi {
         return call;
     }
 
-    public static class Builder {
-        private AWSAuthenticationCredentials awsAuthenticationCredentials;
-        private LWAAuthorizationCredentials lwaAuthorizationCredentials;
-        private String endpoint;
-        private LWAAccessTokenCache lwaAccessTokenCache;
-        private Boolean disableAccessTokenCache = false;
-        private AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider;
+    public static class Builder extends SPAPIBuilder<SellersApi> {
 
-        public Builder awsAuthenticationCredentials(AWSAuthenticationCredentials awsAuthenticationCredentials) {
-            this.awsAuthenticationCredentials = awsAuthenticationCredentials;
-            return this;
+        @Override
+        public SellersApi build(SellerCredentials sellerCredentials) throws NoSuchFieldException, IllegalAccessException {
+            buildAuth(sellerCredentials);
+            return new SellersApi(apiClient);
         }
+    }
 
-        public Builder lwaAuthorizationCredentials(LWAAuthorizationCredentials lwaAuthorizationCredentials) {
-            this.lwaAuthorizationCredentials = lwaAuthorizationCredentials;
-            return this;
+    /**
+     * Authorize for the API call.
+     * TODO - share the token cache with other functions.
+     *
+     * @param sellerCredentials
+     * @return
+     */
+    public static SellersApi buildSellerApi(SellerCredentials sellerCredentials) throws NoSuchFieldException, IllegalAccessException {
+        return (new Builder())
+                .build(sellerCredentials);
+    }
+    // According to the nature of Lambda, in most cases it will not create memory leak.
+    private static Map<String, SellersApi> sellerApiHolder = new HashMap<>();
+
+    public static SellersApi getOrCreateSellersApi(SellerCredentials sellerCredentials) throws NoSuchFieldException, IllegalAccessException {
+        SellersApi api = sellerApiHolder.get(Integer.toHexString(sellerCredentials.hashCode()));
+        if (api == null) {
+            api = SellersApi.buildSellerApi(sellerCredentials);
+            sellerApiHolder.put(Integer.toHexString(sellerCredentials.hashCode()), api);
+            logger.info("Seller API client created.");
         }
+        return api;
+    }
 
-        public Builder endpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
+    public static ApiResponse<GetMarketplaceParticipationsResponse> getMarketplaceParticipations(SellerCredentials sellerCredentials) throws Throwable {
 
-        public Builder lwaAccessTokenCache(LWAAccessTokenCache lwaAccessTokenCache) {
-            this.lwaAccessTokenCache = lwaAccessTokenCache;
-            return this;
-        }
+        // Seller API is per Seller - they have different secrets.
+        final SellersApi sellersApi = SellersApi.getOrCreateSellersApi(sellerCredentials);
 
-	   public Builder disableAccessTokenCache() {
-            this.disableAccessTokenCache = true;
-            return this;
-        }
+        final SellerGetMarketParticipation getMarketParticipation = new SellerGetMarketParticipation(sellersApi);
+        final ApiProxy<GetMarketplaceParticipationsResponse> apiProxy = new ApiProxy<>(getMarketParticipation);
+        final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipationsWithHttpInfo
+                = apiProxy.invkWithToken(null, sellerCredentials.getSeller_id()); // No parameters are needed.
+        return marketplaceParticipationsWithHttpInfo;
 
-        public Builder awsAuthenticationCredentialsProvider(AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider) {
-            this.awsAuthenticationCredentialsProvider = awsAuthenticationCredentialsProvider;
-            return this;
-        }
-
-        // TODO Why is this not used?
-        public SellersApi build() {
-            if (awsAuthenticationCredentials == null) {
-                throw new RuntimeException("AWSAuthenticationCredentials not set");
-            }
-
-            if (lwaAuthorizationCredentials == null) {
-                throw new RuntimeException("LWAAuthorizationCredentials not set");
-            }
-
-            if (StringUtil.isEmpty(endpoint)) {
-                throw new RuntimeException("Endpoint not set");
-            }
-
-            AWSSigV4Signer awsSigV4Signer;
-            if ( awsAuthenticationCredentialsProvider == null) {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials);
-            }
-            else {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials,awsAuthenticationCredentialsProvider);
-            }
-
-            LWAAuthorizationSigner lwaAuthorizationSigner = null;
-            if (disableAccessTokenCache) {
-                lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials);
-            }
-            else {
-                if (lwaAccessTokenCache == null) {
-                    lwaAccessTokenCache = new LWAAccessTokenCacheImpl();
-                 }
-                 lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials,lwaAccessTokenCache);
-            }
-
-            return new SellersApi(new ApiClient()
-                .setAWSSigV4Signer(awsSigV4Signer)
-                .setLWAAuthorizationSigner(lwaAuthorizationSigner)
-                .setBasePath(endpoint));
-        }
     }
 }

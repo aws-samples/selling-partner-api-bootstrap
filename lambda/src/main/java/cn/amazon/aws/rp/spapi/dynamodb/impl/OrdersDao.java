@@ -1,6 +1,7 @@
 package cn.amazon.aws.rp.spapi.dynamodb.impl;
 
 import cn.amazon.aws.rp.spapi.dynamodb.IOrdersDao;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -52,6 +53,8 @@ public class OrdersDao implements IOrdersDao {
         try {
             final PutItemOutcome putResult = table.putItem(new Item()
                     .withPrimaryKey(TABLE_P_KEY, order.getAmazonOrderId(), TABLE_SORT_KEY, sellerId)
+                    .withString("MarketPlaceId","NA")
+                    .withString("LastUpdate",order.getLastUpdateDate())
                     .withJSON("orderDetails", gson.toJson(order)));
             logger.info("PutItem succeeded: ");
         } catch (Exception e) {
@@ -61,7 +64,7 @@ public class OrdersDao implements IOrdersDao {
 
     private static String updateTableName() {
         // Update the table name from environment. It is expected to be set by CDK script on Lambda.
-        final String tableName = System.getenv("DYNAMODB_ORDERS_TABLE");
+        final String tableName = Utils.getEnv("DYNAMODB_ORDERS_TABLE");
         if (tableName != null) {
             TABLE_NAME = tableName;
         }

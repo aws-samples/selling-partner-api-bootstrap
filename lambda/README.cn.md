@@ -10,7 +10,7 @@
 
 ## 代码配置
 
-* 部署后需要在DynamoDB中的Seller secrets表中加入Seller授权的各种Secrets。 
+* 部署后需要在DynamoDB中的Seller secrets表中加入Seller授权的refreshToken, Region
 
 ## 测试
 
@@ -20,3 +20,5 @@
 
 * Notification API需要避免重复订阅 - 处理HTTP 409异常，或者提前检查订阅情况。 
 * 支持基于Sandbox的UT。
+
+* SellersApi.getMarketplaceParticipations 存储结果

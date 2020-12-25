@@ -1,8 +1,10 @@
 package cn.amazon.aws.rp.spapi.lambda.finances;
 
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerSecretsVO;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
+import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
 import cn.amazon.aws.rp.spapi.utils.Helper;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
@@ -20,28 +22,27 @@ import java.util.*;
  * @date: 2020/11/10 11:07
  * @author: zhangkui
  */
-public class FinancesEventsList implements RequestHandler<ScheduledEvent, String> {
+public class GetAllSellerCredentialsAndPullFinances implements RequestHandler<ScheduledEvent, String> {
 
-	private static final Logger logger = LoggerFactory.getLogger(FinancesEventsList.class);
+	private static final Logger logger = LoggerFactory.getLogger(GetAllSellerCredentialsAndPullFinances.class);
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 	@Override
 	public String handleRequest(ScheduledEvent input, Context context) {
 		String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
 		//get seller
-		List<SellerSecretsVO> secretsVOS = Helper.getSellerSecretsVOS();
-		if (secretsVOS.isEmpty()) {
+		List<SellerCredentials> sellerCredentials = SpApiSecretDao.getSellerCredentials();
+		if (sellerCredentials.isEmpty()) {
 			return SpApiConstants.SUCCESS;
 		}
 		Helper.logInput(logger, jsonSellerSecrets, context, gson);
-		secretsVOS.forEach(sellerSecretsVO -> {
+		sellerCredentials.forEach(credentials -> {
 
 		    // Start the job in another lambda.
-			logger.info("start pull payment info for a seller: " +sellerSecretsVO.getSeller_id());
+			logger.info("start pull payment info for a seller: " +credentials.getSeller_id());
 			// Get the function name from environment which is set by CDK.
-			final String funcName = System.getenv("getFinancesListForOneSellerFuncName");
-			logger.info("invoke with - "+gson.toJson(sellerSecretsVO)); // FIXME! delete this.
-			Helper.invokeLambda(funcName, gson.toJson(sellerSecretsVO), true);
+			final String funcName = Utils.getEnv("getFinancesListForOneSellerFuncName");
+			Helper.invokeLambda(funcName, gson.toJson(credentials), true);
 			logger.info("Lambda Started.");
 		});
 		return SpApiConstants.SUCCESS;

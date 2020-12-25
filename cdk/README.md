@@ -4,6 +4,42 @@ This is a blank project for TypeScript development with CDK.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
+
+
+## IAM Role
+**条件说明**
+如果已经按照官方文档，创建并使用了IAM Role，请将IAM Role ARN 添加至
+./bin/cdk.ts中，如：
+```
+new CdkStack(app, 'CdkStack',"arn:aws:iam::716414967168:role/spapi_role_oct");
+```
+此项目会自动添加应用运行时需要的权限。
+
+否则，可不添加IAM Role ARN，如：
+```
+new CdkStack(app, 'CdkStack');
+```
+部署后，cdk会输出IAM Role ARN，及对于的IAM User的AKSK，用于本地调试。
+
+## Amazon App Credential
+安全性要求，clientSecret 需要独立发布到AWS SSM Parameter中
+
+## Amazon App Credential
+安全性要求，请手工配置 System Manager Parameter Store 新增这个参数
+名称：seller_central_app_credentials
+类型：SecureString
+级别：Standard
+KMS key source：My current account/alias/aws/ssm 或选择其他你已有的加密 KMS Key
+seller_central_app_credentials 是用于应用程序用LWA交互凭证使用,来自Seller Centrall Developer Central的LWA credentials
+
+```
+{
+  "clientId": "seller central app clientId",
+  "clientSecret": "seller central app clientSecret",
+}
+```
+
+
 ## Useful commands
 **Setup CDK**
  * `npm install -g aws-cdk`

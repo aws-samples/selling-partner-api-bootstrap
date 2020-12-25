@@ -17,24 +17,24 @@ import java.util.Iterator;
  * @date: 2020/11/11 17:17
  * @author: zhangkui
  */
-public class DocumentAPIGlobalSecondaryIndexExample {
+public class DocumentAPIGlobalSecondaryIndexExampleIT {
 	static AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
 	static DynamoDB dynamoDB = new DynamoDB(client);
 
 	public static String tableName = "Issues";
 
-	public static void main(String[] args) throws Exception {
-
-//		createTable();
-//		loadData();
+//	public static void main(String[] args) throws Exception {
 //
-//		queryIndex("CreateDateIndex");
-		queryIndex("TitleIndex");
-//		queryIndex("DueDateIndex");
+////		createTable();
+////		loadData();
+////
+////		queryIndex("CreateDateIndex");
+////		queryIndex("TitleIndex");
+////		queryIndex("DueDateIndex");
+////
+////		deleteTable(tableName);
 //
-//		deleteTable(tableName);
-
-	}
+//	}
 
 	public static void createTable() {
 

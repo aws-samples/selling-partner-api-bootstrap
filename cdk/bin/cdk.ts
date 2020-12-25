@@ -4,4 +4,4 @@ import * as cdk from '@aws-cdk/core';
 import { CdkStack } from '../lib/cdk-stack';
 
 const app = new cdk.App();
-new CdkStack(app, 'CdkStack');
+new CdkStack(app, 'CdkStack',"arn:aws:iam::XXXXXXX:role/spapi_role_oct");

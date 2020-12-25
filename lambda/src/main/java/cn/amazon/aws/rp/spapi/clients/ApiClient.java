@@ -13,8 +13,8 @@
 
 package cn.amazon.aws.rp.spapi.clients;
 
-import com.amazon.SellingPartnerAPIAA.AWSSigV4Signer;
-import com.amazon.SellingPartnerAPIAA.LWAAuthorizationSigner;
+import cn.amazon.aws.rp.spapi.aa.AWSSigV4Signer;
+import cn.amazon.aws.rp.spapi.aa.LWAAuthorizationSigner;
 import com.squareup.okhttp.*;
 import com.squareup.okhttp.internal.http.HttpMethod;
 import com.squareup.okhttp.logging.HttpLoggingInterceptor;

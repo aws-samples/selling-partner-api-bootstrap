@@ -1,10 +1,12 @@
 package cn.amazon.aws.rp.spapi.eventbridge;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class OrderReceivedEventGeneratorTest {
+@Ignore
+public class OrderReceivedEventGeneratorIT {
 
     @Test
     public void testPut() {

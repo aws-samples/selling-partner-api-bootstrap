@@ -15,7 +15,7 @@ package cn.amazon.aws.rp.spapi.clients.api;
 
 import cn.amazon.aws.rp.spapi.clients.*;
 import cn.amazon.aws.rp.spapi.clients.model.*;
-import com.amazon.SellingPartnerAPIAA.*;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -903,79 +903,18 @@ public class OrdersApi {
         return call;
     }
 
-    public static class Builder {
-        private AWSAuthenticationCredentials awsAuthenticationCredentials;
-        private LWAAuthorizationCredentials lwaAuthorizationCredentials;
-        private String endpoint;
-        private LWAAccessTokenCache lwaAccessTokenCache;
-        private Boolean disableAccessTokenCache = false;
-        private AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider;
+    public static class Builder extends SPAPIBuilder<OrdersApi>  {
 
-        public Builder awsAuthenticationCredentials(AWSAuthenticationCredentials awsAuthenticationCredentials) {
-            this.awsAuthenticationCredentials = awsAuthenticationCredentials;
-            return this;
+        @Override
+        public OrdersApi build(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
+            buildAuth(jsonSellerSecrets);
+            return new OrdersApi(apiClient);
         }
+    }
 
-        public Builder lwaAuthorizationCredentials(LWAAuthorizationCredentials lwaAuthorizationCredentials) {
-            this.lwaAuthorizationCredentials = lwaAuthorizationCredentials;
-            return this;
-        }
+    public static OrdersApi buildOrdersApi(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
 
-        public Builder endpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
-
-        public Builder lwaAccessTokenCache(LWAAccessTokenCache lwaAccessTokenCache) {
-            this.lwaAccessTokenCache = lwaAccessTokenCache;
-            return this;
-        }
-
-        public Builder disableAccessTokenCache() {
-            this.disableAccessTokenCache = true;
-            return this;
-        }
-
-        public Builder awsAuthenticationCredentialsProvider(AWSAuthenticationCredentialsProvider awsAuthenticationCredentialsProvider) {
-            this.awsAuthenticationCredentialsProvider = awsAuthenticationCredentialsProvider;
-            return this;
-        }
-
-
-        public OrdersApi build() {
-            if (awsAuthenticationCredentials == null) {
-                throw new RuntimeException("AWSAuthenticationCredentials not set");
-            }
-
-            if (lwaAuthorizationCredentials == null) {
-                throw new RuntimeException("LWAAuthorizationCredentials not set");
-            }
-
-            if (StringUtil.isEmpty(endpoint)) {
-                throw new RuntimeException("Endpoint not set");
-            }
-
-            AWSSigV4Signer awsSigV4Signer;
-            if (awsAuthenticationCredentialsProvider == null) {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials);
-            } else {
-                awsSigV4Signer = new AWSSigV4Signer(awsAuthenticationCredentials, awsAuthenticationCredentialsProvider);
-            }
-
-            LWAAuthorizationSigner lwaAuthorizationSigner = null;
-            if (disableAccessTokenCache) {
-                lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials);
-            } else {
-                if (lwaAccessTokenCache == null) {
-                    lwaAccessTokenCache = new LWAAccessTokenCacheImpl();
-                }
-                lwaAuthorizationSigner = new LWAAuthorizationSigner(lwaAuthorizationCredentials, lwaAccessTokenCache);
-            }
-
-            return new OrdersApi(new ApiClient()
-                    .setAWSSigV4Signer(awsSigV4Signer)
-                    .setLWAAuthorizationSigner(lwaAuthorizationSigner)
-                    .setBasePath(endpoint));
-        }
+        return (new OrdersApi.Builder())
+                .build(jsonSellerSecrets);
     }
 }

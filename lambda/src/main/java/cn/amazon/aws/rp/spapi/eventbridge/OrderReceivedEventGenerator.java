@@ -1,6 +1,7 @@
 package cn.amazon.aws.rp.spapi.eventbridge;
 
 import cn.amazon.aws.rp.spapi.lambda.vo.OrdersWithSeller;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.services.eventbridge.AmazonEventBridgeClient;
 import com.amazonaws.services.eventbridge.model.PutEventsRequest;
 import com.amazonaws.services.eventbridge.model.PutEventsRequestEntry;
@@ -98,7 +99,7 @@ public class OrderReceivedEventGenerator {
     }
 
     private static void getEventBusName() {
-        final String event_bus_name = System.getenv("EVENT_BUS_NAME");
+        final String event_bus_name = Utils.getEnv("EVENT_BUS_NAME");
         if (event_bus_name != null) {
             BUS_NAME = event_bus_name;
         }

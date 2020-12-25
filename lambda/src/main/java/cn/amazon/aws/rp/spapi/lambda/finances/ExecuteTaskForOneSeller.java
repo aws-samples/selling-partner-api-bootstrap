@@ -4,11 +4,12 @@ import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.FinancesApi;
 import cn.amazon.aws.rp.spapi.clients.api.SellersApi;
 import cn.amazon.aws.rp.spapi.clients.model.*;
+import cn.amazon.aws.rp.spapi.common.IdWorker;
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
 import cn.amazon.aws.rp.spapi.constants.TaskConstants;
 import cn.amazon.aws.rp.spapi.dynamodb.IFinancesDao;
 import cn.amazon.aws.rp.spapi.dynamodb.ISpApiTaskDao;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerSecretsVO;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SpApiTask;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.FinancesDao;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
@@ -34,14 +35,13 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
 
     private static final Logger logger = LoggerFactory.getLogger(ExecuteTaskForOneSeller.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private final Map<String, SellersApi> sellerApiHolder;
     private final Map<String, FinancesApi> financesApiHolder;
+    private static final IdWorker idWorker = new IdWorker();
 
     private final IFinancesDao financesDao;
     private final ISpApiTaskDao spApiTaskDao;
 
     public ExecuteTaskForOneSeller() {
-        sellerApiHolder = new HashMap<>();
         financesApiHolder = new HashMap<>();
         financesDao = new FinancesDao();
         spApiTaskDao = new SpApiTaskDao();
@@ -51,19 +51,28 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
     public Integer handleRequest(Object input, Context context) {
 	    String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
 	    Helper.logInput(logger, jsonSellerSecrets, context, gson);
-	    SellerSecretsVO sellerSecretsVO = gson.fromJson(jsonSellerSecrets, SellerSecretsVO.class);
-	    executeTask(sellerSecretsVO);
+	    SellerCredentials sellerCredentials = gson.fromJson(jsonSellerSecrets, SellerCredentials.class);
+	    executeTask(sellerCredentials);
 	    return SpApiConstants.CODE_200;
     }
 
 
-    public void executeTask(SellerSecretsVO sellerSecretsVO) {
+    public void executeTask(SellerCredentials sellerCredentials) {
         try {
 	        //get task
-	        final String sellerKey = sellerSecretsVO.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
-	        List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerKey);
+	        final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
+	        List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerTaskKey);
 	        if (spApiTaskList.isEmpty()) {
-		        return;
+                SpApiTask task = new SpApiTask();
+                task.setSellerKey(sellerTaskKey);
+                task.setSellerId(sellerCredentials.getSeller_id());
+                task.setStartTime("2020-08-01 00:00:00");
+                task.setEndTime("2020-08-02 00:00:00");
+                task.setTaskId(idWorker.nextId());
+                task.setTaskName(TaskConstants.LIST_FINANCIAL_EVENTS);
+                task.setExecuteStatus(StatusEnum.INIT.getStatus());
+                spApiTaskDao.addTask(task);
+                spApiTaskList.add(task);
 	        }
 	        SpApiTask apiTask = spApiTaskList.stream().findFirst().get();
 	        logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
@@ -75,13 +84,13 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
 	        if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
 		        return;
 	        }
-	        //update task
-	        spApiTaskDao.upTaskStatus(sellerKey, sellerSecretsVO.getSeller_id(), StatusEnum.WORKING.getStatus());
-	        final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipation = getMarketplaceParticipations(sellerSecretsVO);
-	        final MarketplaceParticipationList payloadList = marketplaceParticipation.getData().getPayload();
-	        payloadList.forEach(participation -> {
-		        requestFinancesForOneMkt(participation, sellerSecretsVO, apiTask);
+
+            sellerCredentials.getMarketplaces().forEach(marketplace -> {
+		        requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
 	        });
+
+            //update task
+            spApiTaskDao.upTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
 	        //add task
 	        spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
         } catch (Throwable throwable) {
@@ -89,16 +98,16 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
         }
     }
 
-    private void requestFinancesForOneMkt(MarketplaceParticipation marketplace, SellerSecretsVO sellerSecretsVO, SpApiTask apiTask) {
-        final List<FinancialEvents> financialEventsList = getFinancesListForTimeDelta(sellerSecretsVO, apiTask);
+    private void requestFinancesForOneMkt(Marketplace marketplace, SellerCredentials sellerCredentials, SpApiTask apiTask) {
+        final List<FinancialEvents> financialEventsList = getFinancesListForTimeDelta(sellerCredentials, apiTask);
         if (financialEventsList.isEmpty()) {
             logger.info("NO FinancialEvents FOUND - for this api query.");
             return;
         }
-        financesDao.put(financialEventsList, marketplace, sellerSecretsVO, apiTask);
+        financesDao.put(financialEventsList, marketplace, sellerCredentials, apiTask);
     }
 
-    private List<FinancialEvents> getFinancesListForTimeDelta(SellerSecretsVO secretsVO, SpApiTask spApiTaskVO) {
+    private List<FinancialEvents> getFinancesListForTimeDelta(SellerCredentials secretsVO, SpApiTask spApiTaskVO) {
         final List<FinancialEvents> financialEventsList = new ArrayList<>();
         try {
             logger.info("enter");
@@ -128,14 +137,14 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
     }
 
     private void pullFinancialByNextToken(HashMap<String, Object> input,
-                                          SellerSecretsVO secretsVO,
+                                          SellerCredentials sellerCredentials,
                                           String nextToken,
                                           List<FinancialEvents> financialEventsList)
             throws Throwable {
         logger.info("current pulled financial: " + financialEventsList.size());
-        FinancesApi financesApi = getOrCreateFinancesApi(secretsVO);
+        FinancesApi financesApi = getOrCreateFinancesApi(sellerCredentials);
         input.put("nextToken", nextToken);
-        final ApiResponse<ListFinancialEventsResponse> financesWithHttpInfo = apiProxyInvokeForFinances(secretsVO, financesApi, input);
+        final ApiResponse<ListFinancialEventsResponse> financesWithHttpInfo = apiProxyInvokeForFinances(sellerCredentials, financesApi, input);
         FinancialEvents financialEvents = financesWithHttpInfo.getData().getPayload().getFinancialEvents();
         if (Objects.nonNull(financialEvents)) {
             financialEventsList.add(financialEvents);
@@ -143,49 +152,25 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
         String newToken = financesWithHttpInfo.getData().getPayload().getNextToken();
         if (Objects.nonNull(newToken)) {
             logger.info("pulling more FinancialEvents according to new token.");
-            pullFinancialByNextToken(input, secretsVO, newToken, financialEventsList);
+            pullFinancialByNextToken(input, sellerCredentials, newToken, financialEventsList);
         }
     }
 
-    private ApiResponse<ListFinancialEventsResponse> apiProxyInvokeForFinances(SellerSecretsVO secretsVO, FinancesApi financesApi, HashMap<String, Object> input) throws Throwable {
+    private ApiResponse<ListFinancialEventsResponse> apiProxyInvokeForFinances(SellerCredentials sellerCredentials, FinancesApi financesApi, HashMap<String, Object> input) throws Throwable {
 
         // Invoke with API proxy
         final FinancesEventsApiInvoker getFinances = new FinancesEventsApiInvoker(financesApi);
         final ApiProxy<ListFinancialEventsResponse> apiProxy = new ApiProxy<>(getFinances);
 
         // Invoke
-        return apiProxy.invkWithToken(input, secretsVO.getSeller_id());
+        return apiProxy.invkWithToken(input, sellerCredentials.getSeller_id());
     }
 
-    private ApiResponse<GetMarketplaceParticipationsResponse> getMarketplaceParticipations(SellerSecretsVO secretsVO) throws Throwable {
-
-        // Seller API is per Seller - they have different secrets.
-        final SellersApi sellersApi = getOrCreateSellersApi(secretsVO);
-
-        final SellerGetMarketParticipation getMarketParticipation = new SellerGetMarketParticipation(sellersApi);
-        final ApiProxy<GetMarketplaceParticipationsResponse> apiProxy = new ApiProxy<>(getMarketParticipation);
-        final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipationsWithHttpInfo
-                = apiProxy.invkWithToken(null, secretsVO.getSeller_id()); // No parameters are needed.
-        logger.debug("Server responded.");
-        return marketplaceParticipationsWithHttpInfo;
-
-    }
-
-    private FinancesApi getOrCreateFinancesApi(SellerSecretsVO secretsVO) {
-        FinancesApi api = financesApiHolder.get(Integer.toHexString(secretsVO.hashCode()));
+    private FinancesApi getOrCreateFinancesApi(SellerCredentials sellerCredentials) throws NoSuchFieldException, IllegalAccessException {
+        FinancesApi api = financesApiHolder.get(Integer.toHexString(sellerCredentials.hashCode()));
         if (api == null) {
-            api = Helper.buildFinancesApi(secretsVO);
-            financesApiHolder.put(Integer.toHexString(secretsVO.hashCode()), api);
-            logger.info("Seller API client created.");
-        }
-        return api;
-    }
-
-    private SellersApi getOrCreateSellersApi(SellerSecretsVO secretsVO) {
-        SellersApi api = sellerApiHolder.get(Integer.toHexString(secretsVO.hashCode()));
-        if (api == null) {
-            api = Helper.buildSellerApi(secretsVO);
-            sellerApiHolder.put(Integer.toHexString(secretsVO.hashCode()), api);
+            api = FinancesApi.buildFinancesApi(sellerCredentials);
+            financesApiHolder.put(Integer.toHexString(sellerCredentials.hashCode()), api);
             logger.info("Seller API client created.");
         }
         return api;

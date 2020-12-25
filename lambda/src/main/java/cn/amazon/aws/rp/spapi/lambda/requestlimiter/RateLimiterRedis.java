@@ -1,5 +1,6 @@
 package cn.amazon.aws.rp.spapi.lambda.requestlimiter;
 
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.redisson.Redisson;
@@ -21,7 +22,7 @@ public class RateLimiterRedis {
      */
     static {
         Config config = new Config();
-        String redisURL = "redis://" + System.getenv("REDIS_URL") + ":6379";
+        String redisURL = "redis://" + Utils.getEnv("REDIS_URL") + ":6379";
         logger.info("Connecting to redis: " + redisURL);
         config.useSingleServer()
                 .setAddress(redisURL)

@@ -15,12 +15,21 @@ dependencies {
     implementation 'com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2'
     implementation 'com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2-instrumentor'
 
+    annotationProcessor 'org.projectlombok:lombok:1.18.8'
+    compileOnly 'org.projectlombok:lombok:1.18.8'
+    implementation 'org.apache.commons:commons-lang3:3.11'
+
+
     // aws lambda sdk
     implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'
     implementation 'com.amazonaws:aws-lambda-java-events:3.1.0'
+//    implementation 'com.amazonaws:aws-java-sdk-core:1.11.887'
     implementation 'com.amazonaws:aws-java-sdk-eventbridge:1.11.887'
     implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.11.887'
     implementation 'com.amazonaws:aws-java-sdk-lambda:1.11.887'
+    implementation 'com.amazonaws:aws-java-sdk-ssm:1.11.887'
+    implementation 'com.amazonaws:aws-java-sdk-sts:1.11.887'
+
     // json library
     implementation 'com.google.code.gson:gson:2.8.6'
 
@@ -36,7 +45,7 @@ dependencies {
     implementation 'org.threeten:threetenbp:1.3.5'
     // This package is from https://github.com/amzn/selling-partner-api-models
     // But we need to make its aws-sdk as runtime provided to avoid version conflict.
-    implementation 'com.amazon.sellingpartnerapi:sellingpartnerapi-aa-java:1.0.1'
+//    implementation 'com.amazon.sellingpartnerapi:sellingpartnerapi-aa-java:1.0.1'
 
     // logging
     implementation 'org.apache.logging.log4j:log4j-api:2.13.0'
@@ -45,7 +54,11 @@ dependencies {
     runtimeOnly 'com.amazonaws:aws-lambda-java-log4j2:1.2.0'
 
     // UT
-    implementation 'junit:junit:4.12'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.junit.jupiter:junit-jupiter:5.7.0'
+
+    // java 11 dependency
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
 }
 
 task buildZip(type: Zip) {

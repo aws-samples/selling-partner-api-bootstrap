@@ -1,5 +1,6 @@
 package cn.amazon.aws.rp.spapi.dynamodb;
 
+
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 /**
  * This class will save default secrets to DDB. It can optional done by adding from console.
  */
-public class InitCredentialsTableHelper {
+public class CreateSampleSecretsIT {
 
     private static final AmazonDynamoDB DDB = AmazonDynamoDBClientBuilder.standard().build();
     private static final String TABLE_NAME = "spapi-secrets";
@@ -32,7 +33,7 @@ public class InitCredentialsTableHelper {
         item_values.put("lWAAuthorizationCredentials_clientid",
                 new AttributeValue(""));
         item_values.put("lWAAuthorizationCredentials_clientSecret",
-                new AttributeValue(""));
+                new AttributeValue("b30deeb80824ac0685fedb0b01e99d28d6ee7a2973baedb25f3875dd704107fc"));
         item_values.put("lWAAuthorizationCredentials_refreshToken",
                 new AttributeValue(""));
 
@@ -51,10 +52,11 @@ public class InitCredentialsTableHelper {
         System.out.println("Done!");
     }
 
-    public static void main(String[] args) {
-        final InitCredentialsTableHelper ddb = new InitCredentialsTableHelper();
-        ddb.putItem(TABLE_NAME, "seller_jim");
-        ddb.putItem(TABLE_NAME, "seller_tom");
-        System.out.println("hello");
-    }
+//    public static void main(String[] args) {
+//        final CreateSampleSecrets ddb = new CreateSampleSecrets();
+////        ddb.putItem(TABLE_NAME, "seller_jim");
+//        ddb.putItem(TABLE_NAME, "seller_tom");
+//        System.out.println("hello");
+//    }
 }
+
