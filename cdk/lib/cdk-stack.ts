@@ -146,12 +146,13 @@ export class SpApi extends cdk.Stack {
     const vpc = new ec2.Vpc(this, "SpApiVpc", {
       cidr: '10.233.0.0/16',
       natGateways: 1,
+      // Allow 4K IP address in each subnet.
       subnetConfiguration: [{
-        cidrMask: 22,
+        cidrMask: 20,
         name: 'private',
         subnetType: ec2.SubnetType.PRIVATE
       }, {
-        cidrMask: 22,
+        cidrMask: 20,
         name: 'public',
         subnetType: ec2.SubnetType.PUBLIC
       }]

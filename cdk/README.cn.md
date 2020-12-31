@@ -1,8 +1,11 @@
 # Welcome to your CDK TypeScript project!
 
-This is a blank project for TypeScript development with CDK.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
+
+## Define Deployment Environment
+
+There are serval ways to specify where to deploy your stack. [Ref Link](https://docs.aws.amazon.com/cdk/latest/guide/environments.html).
 
 
 
@@ -47,6 +50,7 @@ seller_central_app_credentials 是用于应用程序用LWA交互凭证使用,来
  * `npm link typescript`
  * `npm install @aws-cdk/aws-s3 @aws-cdk/aws-lambda @aws-cdk/aws-events-targets @aws-cdk/aws-dynamodb @aws-cdk/aws-sqs`
  * `npm install @aws-cdk/core`
+ * `npm install -g aws-cdk@latest` -- In case CDK need upgrades.
 
  The solution for most of CDK issues can be found [here](https://docs.aws.amazon.com/cdk/latest/guide/troubleshooting.html) .
 
@@ -67,4 +71,13 @@ seller_central_app_credentials 是用于应用程序用LWA交互凭证使用,来
  `mvn install:install-file -Dfile=sellingpartnerapi-aa-java-1.0.1-jar-with-dependencies.jar -DgroupId=com.amazon.sellingpartnerapi -DartifactId=sellingpartnerapi-aa-java -Dversion=1.0.1 -Dpackaging=jar`
 
  Then package it with `gradle buildZip`
+
+ ## Other Trouble Shooting
+
+> If `cdk` don't build or run.
+After upgrade the CDK with `npm update -g aws-cdk` you may check if everything is updated with `npm outdated` if there is any, you should update `package.json` and then do the following
+    1. Make sure your `package.json` lists the same CDK version.
+    2. Nuke node_modules
+    3. Run `npm install` again
+
 
