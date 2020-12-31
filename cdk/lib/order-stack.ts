@@ -3,14 +3,14 @@ import * as events from '@aws-cdk/aws-events';
 import * as iam from '@aws-cdk/aws-iam';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
-import { commonParameter } from './commonParameter';
+import { CommonParameter } from './commonParameter';
 
 
 export class OrderStack extends cdk.Stack {
 
     getOrderListForOneSellerFunc: lambda.Function;
 
-    constructor(scope: cdk.Construct, parameter: commonParameter, props?: cdk.StackProps) {
+    constructor(scope: cdk.Construct, parameter: CommonParameter, props?: cdk.StackProps) {
         super(scope, "OrderStack", props);
 
         const ordersTableName = 'amz_sp_api_orders';

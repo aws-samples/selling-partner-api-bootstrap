@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { CdkStack } from '../lib/cdk-stack';
+import { SpApi } from '../lib/cdk-stack';
 
 const app = new cdk.App();
-new CdkStack(app, 'CdkStack',"arn:aws:iam::XXXXXXX:role/spapi_role_oct");
+new SpApi(app, 'CdkStack',"arn:aws:iam::XXXXXXX:role/spapi_role_oct");

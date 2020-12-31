@@ -5,7 +5,7 @@ import * as events from '@aws-cdk/aws-events';
 import * as ssm from '@aws-cdk/aws-ssm';
 
 
-export interface commonParameter {
+export interface CommonParameter {
     readonly codeZip: string;
     readonly lambdaSG: ec2.SecurityGroup;
     readonly vpc: ec2.Vpc;

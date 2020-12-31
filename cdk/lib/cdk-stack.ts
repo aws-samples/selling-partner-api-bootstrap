@@ -16,7 +16,7 @@ import { OrderStack } from './order-stack';
 
 
 // TODO rename the class as SpApi
-export class CdkStack extends cdk.Stack {
+export class SpApi extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, spapi_role_arn: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -141,8 +141,6 @@ export class CdkStack extends cdk.Stack {
     api.root.addMethod("GET", integration);
 
   }
-
- 
 
   private initInfra() {
     const vpc = new ec2.Vpc(this, "SpApiVpc", {
