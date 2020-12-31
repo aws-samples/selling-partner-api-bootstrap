@@ -1,17 +1,9 @@
-import * as cdk from '@aws-cdk/core';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as elasticache from '@aws-cdk/aws-elasticache';
-import * as apigw from '@aws-cdk/aws-apigateway';
-import * as path from 'path';
+import { AttributeType, BillingMode, Table } from '@aws-cdk/aws-dynamodb';
 import * as events from '@aws-cdk/aws-events';
-import { AttributeType, Table, BillingMode } from '@aws-cdk/aws-dynamodb';
-import * as sqs from '@aws-cdk/aws-sqs';
 import * as iam from '@aws-cdk/aws-iam';
-import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources'
-import { CfnOutput, Duration } from '@aws-cdk/core';
-import * as ssm from '@aws-cdk/aws-ssm';
-import { commonParameter } from './commonParameter'
+import * as lambda from '@aws-cdk/aws-lambda';
+import * as cdk from '@aws-cdk/core';
+import { commonParameter } from './commonParameter';
 
 
 export class FinancesStack extends cdk.Stack {
