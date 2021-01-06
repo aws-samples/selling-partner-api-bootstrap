@@ -49,20 +49,20 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
 
     @Override
     public Integer handleRequest(Object input, Context context) {
-	    String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
-	    Helper.logInput(logger, jsonSellerSecrets, context, gson);
-	    SellerCredentials sellerCredentials = gson.fromJson(jsonSellerSecrets, SellerCredentials.class);
-	    executeTask(sellerCredentials);
-	    return SpApiConstants.CODE_200;
+        String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
+        Helper.logInput(logger, jsonSellerSecrets, context, gson);
+        SellerCredentials sellerCredentials = gson.fromJson(jsonSellerSecrets, SellerCredentials.class);
+        executeTask(sellerCredentials);
+        return SpApiConstants.CODE_200;
     }
 
 
     public void executeTask(SellerCredentials sellerCredentials) {
         try {
-	        //get task
-	        final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
-	        List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerTaskKey);
-	        if (spApiTaskList.isEmpty()) {
+            //get task
+            final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
+            List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerTaskKey);
+            if (spApiTaskList.isEmpty()) {
                 SpApiTask task = new SpApiTask();
                 task.setSellerKey(sellerTaskKey);
                 task.setSellerId(sellerCredentials.getSeller_id());
@@ -73,26 +73,26 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
                 task.setExecuteStatus(StatusEnum.INIT.getStatus());
                 spApiTaskDao.addTask(task);
                 spApiTaskList.add(task);
-	        }
-	        SpApiTask apiTask = spApiTaskList.stream().findFirst().get();
-	        logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
-	        //check time
-	        long diff = DateUtil.betweenTwoTime(DateUtil.toUtc(DateUtil.getLocalDateTime(apiTask.getEndTime())), DateUtil.toUtc(LocalDateTime.now()), ChronoUnit.HOURS);
-	        if (diff < 1) {
-		        return;
-	        }
-	        if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
-		        return;
-	        }
+            }
+            SpApiTask apiTask = spApiTaskList.stream().findFirst().get();
+            logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
+            //check time
+            long diff = DateUtil.betweenTwoTime(DateUtil.toUtc(DateUtil.getLocalDateTime(apiTask.getEndTime())), DateUtil.toUtc(LocalDateTime.now()), ChronoUnit.HOURS);
+            if (diff < 1) {
+                return;
+            }
+            if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
+                return;
+            }
 
             sellerCredentials.getMarketplaces().forEach(marketplace -> {
-		        requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
-	        });
+                requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
+            });
 
             //update task
             spApiTaskDao.upTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
-	        //add task
-	        spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
+            //add task
+            spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
         } catch (Throwable throwable) {
             logger.error("Api call failed", throwable);
         }
