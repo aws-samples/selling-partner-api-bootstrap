@@ -1,4 +1,5 @@
 import datetime
+import gzip
 import random
 # from province_city import language_code
 import string
@@ -10,7 +11,6 @@ from faker import Faker
 from faker.providers import address
 from faker.providers import date_time
 from faker.providers import python
-import gzip
 
 # pip install faker==4.0.1
 # https://faker.readthedocs.io/en/master/fakerclass.html
@@ -48,7 +48,8 @@ file_dir = "fakeData/"
 separtor = '|'
 letters = string.ascii_letters
 
-row = '"AmazonOrderId": "{}", ' \
+row = '"SellerId": "{}", ' \
+      '"AmazonOrderId": "{}", ' \
       '"PurchaseDate": "{}", ' \
       '"LastUpdateDate": "{}", ' \
       '"OrderStatus": "{}", ' \
@@ -77,6 +78,7 @@ f.add_provider(date_time)
 f.add_provider(address)
 Faker.seed(6789)
 
+Sellers = ("SellerA", "SellerB", "SellerC")
 app_id_elements = tuple("fancy_game_" + str(t) for t in range(99))
 other_type = tuple("other_" + str(t) for t in range(95))
 types = ("login", "tutorial", "new_user", "payment") + other_type
@@ -129,16 +131,23 @@ def get_random_date(from_y, from_m, from_d, to_y, to_m, to_d):
         date = f.date_time_between(start_date=datetime.datetime(from_y, from_m, from_d, 0, 0),
                                    end_date=datetime.datetime(to_y, to_m, to_d, 0, 0),
                                    tzinfo=None)
-        return date
+        # Thu, 01 Sep 2016 10:11:12 +0000 -- rfc2822
+        # YYYY/MM/DD-HH:MM:SS.UUUU
+        # return date.astimezone().strftime("%a, %d %b %Y %X %z")
+        # return date.strftime("%Y/%m/%d-%X.0000")
+        # 2021-01-08 20:23:47 https://docs.aws.amazon.com/athena/latest/ug/create-table.html
+        return date.astimezone().strftime("%Y-%m-%d %X")
+        # return date.astimezone().isoformat()
     except:
         print(">>>>>> Skip Day {}-{}".format(to_m, to_d))
-        return "not valid date"
+        return ""
 
 
 def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
     data_range = (from_y, from_m, from_d, to_y, to_m, to_d)
 
     r = row.format(
+        f.random_element(Sellers),
         str(random.randint(1, 999)).zfill(3) + "-" + str(random.randint(1, m * 9)).zfill(7) + "-" + str(
             random.randint(1, m * 9)).zfill(7),
         get_random_date(*data_range),  # PurchaseDate
@@ -180,8 +189,8 @@ def generate_path(from_y, from_m, from_d, to_y, to_m, to_d):
         # print(partion_date)
         per_hour_file_names = [str(n).zfill(5) for n in range(24)]  # one day will have 240 files
         for hour in per_hour_file_names:
-            raw_path = "fakeData/adjust/raw_events/{}/".format(partion_date)
-            raw_file_name = "raw_events_{}.gz".format(hour)
+            raw_path = "fakeData/orders/raw_events/{}/".format(partion_date)
+            raw_file_name = "raw_events_{}.json".format(hour)
             # Make sure the paths are created.
             Path(raw_path).mkdir(parents=True, exist_ok=True)
             all_path.append((raw_path + raw_file_name, log_date))
@@ -189,7 +198,7 @@ def generate_path(from_y, from_m, from_d, to_y, to_m, to_d):
     return all_path
 
 
-def process_one_pice(p, a_slice):
+def process_one_piece(p, a_slice):
     """
     :param a_slice: A list of (path: date)
     :return:
@@ -234,7 +243,7 @@ if __name__ == "__main__":
 
     """
     # Time span will decide how much log will be generated.
-    all_path = generate_path(2019, 1, 1, 2019, 7, 2)
+    all_path = generate_path(2019, 1, 1, 2019, 1, 3)
     # How many process to use.
     num_process = 8
     batch_size = len(all_path) // num_process
@@ -245,7 +254,7 @@ if __name__ == "__main__":
         a_slice = all_path[crr:crr + batch_size]
         print("slice size " + str((crr, crr + batch_size)))
         crr = crr + batch_size
-        ps = Process(target=process_one_piece_gz, args=[p, a_slice])
+        ps = Process(target=process_one_piece, args=[p, a_slice])
         ps.start()
     if remain_size > 0:
-        Process(target=process_one_piece_gz, args=[p, all_path[-remain_size]]).start()
+        Process(target=process_one_piece, args=[p, all_path[-remain_size]]).start()
