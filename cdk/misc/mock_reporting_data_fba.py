@@ -69,7 +69,7 @@ def get_random_date(from_y, from_m, from_d, to_y, to_m, to_d):
         # return date.astimezone().isoformat()
     except:
         print(">>>>>> Skip Day {}-{}".format(to_m, to_d))
-        return ""
+        return "1979-04-10 00:00:00"
 
 
 def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     """
     # Time span will decide how much log will be generated.
-    all_path = generate_path(2019, 1, 1, 2019, 1, 3)
+    all_path = generate_path(2019, 1, 1, 2019, 2, 2)
     # How many process to use.
     num_process = 8
     batch_size = len(all_path) // num_process
