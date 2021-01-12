@@ -69,7 +69,7 @@ def get_random_date(from_y, from_m, from_d, to_y, to_m, to_d):
         # return date.astimezone().isoformat()
     except:
         print(">>>>>> Skip Day {}-{}".format(to_m, to_d))
-        return "1979-04-10 00:00:00"
+        return "{}-{}-{} 00:00:00".format(from_y, from_m, from_d)
 
 
 def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
