@@ -48,6 +48,8 @@ s = 128
 sellers = ("SellerA", "SellerB", "SellerC")
 
 pairs = []
+
+# We have around 15 items in stock.
 for id in "abcdefghigklmn":
     name = f.lexify(text='????????????', letters='0987654321abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
     pairs.append([id, name])
@@ -75,8 +77,8 @@ def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
 
     r = row.format(
         f.random_element(sellers),
-        pair[0],
-        pair[0],
+        "asin" + pair[0],
+        "fnSku" + pair[0],
         pair[1],
         str(random.randint(1, 500)),
         str(random.randint(1, 200)),
