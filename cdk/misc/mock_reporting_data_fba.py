@@ -77,8 +77,8 @@ def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
 
     r = row.format(
         f.random_element(sellers),
-        "asin" + pair[0],
-        "fnSku" + pair[0],
+        "asin-" + pair[0],
+        "fnSku-" + pair[0],
         pair[1],
         str(random.randint(1, 500)),
         str(random.randint(1, 200)),
