@@ -39,10 +39,10 @@ CREATE EXTERNAL TABLE IF NOT EXISTS fba_ext (
     fnSku                       string,
     sellerSku                   string,
     condition                   string,
-    fulfillableQuantity         string,
-    inboundShippedQuantity      string,
-    inboundWorkingQuantity      string,
-    inboundReceivingQuantity    string,
+    fulfillableQuantity         int,
+    inboundShippedQuantity      int,
+    inboundWorkingQuantity      int,
+    inboundReceivingQuantity    int,
     eventTime                   TIMESTAMP
     )
 PARTITIONED BY (date string)
