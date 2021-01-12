@@ -208,6 +208,8 @@ def process_one_piece(p, a_slice):
     for i in a_slice:
 
         # with gzip.open(i[0], "a", 9) as file:
+        print("i")
+        print(">>>>>>>>>>>>>>>>>>>>>>> " + i[0])
         with open(i[0], "w") as file:
             print("process " + str(p) + ", write file: " + i[0] + ", for date " + str(i[1].day))
             d = i[1]
