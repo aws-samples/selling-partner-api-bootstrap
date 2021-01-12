@@ -48,3 +48,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS fba_ext (
 PARTITIONED BY (date string)
 ROW FORMAT  serde 'org.apache.hive.hcatalog.data.JsonSerDe'
 LOCATION 's3://spapi-reporting/fba/';
+
+
+
+MSCK REPAIR TABLE fba_ext;
