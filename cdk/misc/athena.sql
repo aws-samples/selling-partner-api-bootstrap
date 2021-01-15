@@ -52,3 +52,21 @@ LOCATION 's3://spapi-reporting/fba/';
 
 
 MSCK REPAIR TABLE fba_ext;
+
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS spapistatus_ext (
+    sellerid                    string,
+    apiName                     string,
+    resourceName                string,
+    resourceAction              string,
+    invocationStatus            string,
+    datetime                    TIMESTAMP
+    )
+PARTITIONED BY (date string)
+ROW FORMAT  serde 'org.apache.hive.hcatalog.data.JsonSerDe'
+LOCATION 's3://spapi-reporting/crawler/events/';
+
+
+
+MSCK REPAIR TABLE spapistatus_ext;
