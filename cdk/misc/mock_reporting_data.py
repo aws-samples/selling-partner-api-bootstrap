@@ -70,6 +70,7 @@ row = '"SellerId": "{}", ' \
       '"IsPrime": {}, ' \
       '"IsGlobalExpressEnabled": {}, ' \
       '"IsPremiumOrder": {}, ' \
+      '"OrderTotalAmount": {}, ' \
       '"IsSoldByAB": {} '
 
 f = Faker()
@@ -165,6 +166,7 @@ def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
         get_true_false(),  # is prime
         get_true_false(),
         get_true_false(),
+        random.randint(1, 30),
         get_true_false(),
         # f.country(),
     )
@@ -245,9 +247,9 @@ if __name__ == "__main__":
 
     """
     # Time span will decide how much log will be generated.
-    all_path = generate_path(2019, 1, 1, 2019, 1, 3)
+    all_path = generate_path(2019, 1, 1, 2019, 2, 2)
     # How many process to use.
-    num_process = 8
+    num_process = 12
     batch_size = len(all_path) // num_process
     remain_size = len(all_path) % num_process
     print("remain size " + str(remain_size))
