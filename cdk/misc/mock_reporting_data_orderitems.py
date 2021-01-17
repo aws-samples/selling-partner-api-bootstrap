@@ -15,63 +15,22 @@ from faker.providers import python
 # pip install faker==4.0.1
 # https://faker.readthedocs.io/en/master/fakerclass.html
 #
-# Sample:
-#   {"Orders": [
-#         {
-#           "AmazonOrderId": "902-3159896-1390916",
-#           "PurchaseDate": "2017-01-20T19:49:35Z",
-#           "LastUpdateDate": "2017-01-20T19:49:35Z",
-#           "OrderStatus": "Pending",
-#           "FulfillmentChannel": "SellerFulfilled",
-#           "NumberOfItemsShipped": 0,
-#           "NumberOfItemsUnshipped": 0,
-#           "PaymentMethod": "Other",
-#           "PaymentMethodDetails": [
-#             "CreditCard",
-#             "GiftCerificate"
-#           ],
-#           "MarketplaceId": "ATVPDKIKX0DER",
-#           "ShipmentServiceLevelCategory": "Standard",
-#           "OrderType": "StandardOrder",
-#           "EarliestShipDate": "2017-01-20T19:51:16Z",
-#           "LatestShipDate": "2017-01-25T19:49:35Z",
-#           "IsBusinessOrder": false,
-#           "IsPrime": false,
-#           "IsGlobalExpressEnabled": false,
-#           "IsPremiumOrder": false,
-#           "IsSoldByAB": false
-#         }
-#       ]}
-
 
 file_dir = "fakeData/"
 separtor = '|'
 letters = string.ascii_letters
 
 row = '"SellerId": "{}", ' \
-      '"AmazonOrderId": "{}", ' \
-      '"PurchaseDate": "{}", ' \
-      '"LastUpdateDate": "{}", ' \
-      '"OrderStatus": "{}", ' \
-      '"FulfillmentChannel": "{}", ' \
-      '"NumberOfItemsShipped": {}, ' \
-      '"NumberOfItemsUnshipped": {}, ' \
-      '"PaymentMethod": "Other", ' \
-      '"PaymentMethodDetails": [ ' \
-      '"{}", ' \
-      '"{}" ' \
-      '], ' \
-      '"MarketplaceId": "{}", ' \
-      '"ShipmentServiceLevelCategory": "{}", ' \
-      '"OrderType": "StandardOrder", ' \
-      '"EarliestShipDate": "{}", ' \
-      '"LatestShipDate": "{}", ' \
-      '"IsBusinessOrder": false, ' \
-      '"IsPrime": {}, ' \
-      '"IsGlobalExpressEnabled": {}, ' \
-      '"IsPremiumOrder": {}, ' \
-      '"OrderTotalAmount": {}, ' \
-      '"IsSoldByAB": {} '
+      '"AmazonOrderId": "mock_amz_id", ' \
+      '"OrderItemId": "{}", ' \
+      '"SellerSKU": "Name of product - {}", ' \
+      '"ASIN": "{}", ' \
+      '"Title": "{}", ' \
+      '"QuantityOrdered": {}, ' \
+      '"QuantityShipped": {}, ' \
+      '"ItemPrice_CurrencyCode": "USD", ' \
+      '"ItemPrice_Amount": {}, ' \
+      '"eventTime": "{}" '
 
 f = Faker()
 f.add_provider(python)
@@ -79,7 +38,6 @@ f.add_provider(date_time)
 f.add_provider(address)
 Faker.seed(6789)
 
-Sellers = ("SellerA", "SellerB", "SellerC")
 app_id_elements = tuple("fancy_game_" + str(t) for t in range(99))
 other_type = tuple("other_" + str(t) for t in range(95))
 types = ("login", "tutorial", "new_user", "payment") + other_type
@@ -87,19 +45,14 @@ m = 1000000
 k = 1000
 s = 128
 
-OrderStatus = ("Pending", "Paid", "Shipping")
-FulfillmentChannel = ("SellerFulfilled", "FBA")
-PaymentMethod = ("Discount", "GiftCerificate", "CreditCard")
-MarketplaceId = ("ATVPDKIKX0DER", "LASKDFUIYAUY", "ASHDFKJHWENRB")
-ShipmentServiceLevelCategory = ("Standard", "1-day", "15-day")
-OrderType = ("StandardOrder")
+sellers = ("SellerA", "SellerB", "SellerC")
 
-#
-def get_true_false():
-    if random.randint(0, 9) >= 5:
-        return "true"
-    else:
-        return "false"
+pairs = []
+
+# We have around 15 items in stock.
+for id in "abcdefghigklmn":
+    name = f.lexify(text='????????????', letters='0987654321abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    pairs.append([id, name])
 
 
 def get_random_date(from_y, from_m, from_d, to_y, to_m, to_d):
@@ -120,30 +73,19 @@ def get_random_date(from_y, from_m, from_d, to_y, to_m, to_d):
 
 
 def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
-    data_range = (from_y, from_m, from_d, to_y, to_m, to_d)
-
+    pair = f.random_element(pairs)
+    quantity = random.randint(1, 5)
     r = row.format(
-        f.random_element(Sellers),
+        f.random_element(sellers),
         str(random.randint(1, 999)).zfill(3) + "-" + str(random.randint(1, m * 9)).zfill(7) + "-" + str(
             random.randint(1, m * 9)).zfill(7),
-        get_random_date(*data_range),  # PurchaseDate
-        get_random_date(*data_range),
-        f.random_element(OrderStatus),
-        f.random_element(FulfillmentChannel),
-        random.randint(1, 5),  # Item shipped
-        random.randint(0, 1),  # Item not shipped
-        f.random_element(PaymentMethod),
-        f.random_element(PaymentMethod),  # May duplicate
-        f.random_element(MarketplaceId),
-        f.random_element(ShipmentServiceLevelCategory),
-        get_random_date(*data_range),
-        get_random_date(*data_range),
-        get_true_false(),  # is prime
-        get_true_false(),
-        get_true_false(),
-        random.randint(1, 30),
-        get_true_false(),
-        # f.country(),
+        "fnSku-" + pair[0],
+        "asin-" + pair[0],
+        "name-" + pair[1],
+        str(quantity),
+        str(quantity),
+        str(random.randint(1, 50)),
+        get_random_date(from_y, from_m, from_d, to_y, to_m, to_d)
     )
 
     return "{" + r + "}" + "\n"
@@ -151,8 +93,8 @@ def generate_one_json_row(from_y, from_m, from_d, to_y, to_m, to_d):
 
 def generate_path(from_y, from_m, from_d, to_y, to_m, to_d):
     """
-    s3://<bucket_name>/adjust/raw_events/date=2020-02-20/raw_events_00001.gz
-    s3://<bucket_name>/adjust/raw_events/date=2020-02-20/raw_events_00001.parquet
+    s3://<bucket_name>/adjust/fba/date=2020-02-20/raw_events_00001.gz
+    s3://<bucket_name>/adjust/fba/date=2020-02-20/raw_events_00001.parquet
     """
     # generate path
     f_d = datetime.datetime(from_y, from_m, from_d)
@@ -166,13 +108,16 @@ def generate_path(from_y, from_m, from_d, to_y, to_m, to_d):
         # print(partion_date)
         per_hour_file_names = [str(n).zfill(5) for n in range(24)]  # one day will have 240 files
         for hour in per_hour_file_names:
-            raw_path = "fakeData/orders/raw_events/{}/".format(partion_date)
+            raw_path = "fakeData/fba/{}/".format(partion_date)
             raw_file_name = "raw_events_{}.json".format(hour)
             # Make sure the paths are created.
             Path(raw_path).mkdir(parents=True, exist_ok=True)
             all_path.append((raw_path + raw_file_name, log_date))
 
     return all_path
+
+ROWS_A_FILE = 45  # s=128 k = 117KB, m = 116M, if set at m, then 1 day is 240*116M = 28G, 1 year is 10T
+
 
 
 def process_one_piece(p, a_slice):
@@ -212,8 +157,6 @@ def process_one_piece_gz(p, a_slice):
     print("completed one.")
 
 
-ROWS_A_FILE = s  # s=128 k = 117KB, m = 116M, if set at m, then 1 day is 240*116M = 28G, 1 year is 10T
-
 if __name__ == "__main__":
     """
     == How to use ==
@@ -224,7 +167,7 @@ if __name__ == "__main__":
     # Time span will decide how much log will be generated.
     all_path = generate_path(2019, 1, 1, 2019, 2, 2)
     # How many process to use.
-    num_process = 12
+    num_process = 8
     batch_size = len(all_path) // num_process
     remain_size = len(all_path) % num_process
     print("remain size " + str(remain_size))
