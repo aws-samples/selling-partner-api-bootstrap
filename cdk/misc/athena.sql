@@ -79,15 +79,15 @@ CREATE EXTERNAL TABLE IF NOT EXISTS orderitems_ext (
     sellersku                  string,
     asin                       string,
     title                      string,
-    quqntityordered            int,
-    quqntityshipped            int,
+    quantityordered            int,
+    quantityshipped            int,
     itemprice_currencycode     string,
     itemprice_amount           int,
     datetime                   TIMESTAMP
     )
 PARTITIONED BY (date string)
 ROW FORMAT  serde 'org.apache.hive.hcatalog.data.JsonSerDe'
-LOCATION 's3://spapi-reporting/order-items/events/';
+LOCATION 's3://spapi-reporting/order-items/';
 
 
 
