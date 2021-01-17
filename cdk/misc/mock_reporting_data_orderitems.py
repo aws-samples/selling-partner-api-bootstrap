@@ -108,7 +108,7 @@ def generate_path(from_y, from_m, from_d, to_y, to_m, to_d):
         # print(partion_date)
         per_hour_file_names = [str(n).zfill(5) for n in range(24)]  # one day will have 240 files
         for hour in per_hour_file_names:
-            raw_path = "fakeData/fba/{}/".format(partion_date)
+            raw_path = "fakeData/order-items/{}/".format(partion_date)
             raw_file_name = "raw_events_{}.json".format(hour)
             # Make sure the paths are created.
             Path(raw_path).mkdir(parents=True, exist_ok=True)

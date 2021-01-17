@@ -70,3 +70,25 @@ LOCATION 's3://spapi-reporting/crawler/events/';
 
 
 MSCK REPAIR TABLE spapistatus_ext;
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS orderitems_ext (
+    sellerid                   string,
+    amazonorderid              string,
+    orderitemid                string,
+    sellersku                  string,
+    asin                       string,
+    title                      string,
+    quqntityordered            int,
+    quqntityshipped            int,
+    itemprice_currencycode     string,
+    itemprice_amount           int,
+    datetime                   TIMESTAMP
+    )
+PARTITIONED BY (date string)
+ROW FORMAT  serde 'org.apache.hive.hcatalog.data.JsonSerDe'
+LOCATION 's3://spapi-reporting/order-items/events/';
+
+
+
+MSCK REPAIR TABLE orderitems_ext;
