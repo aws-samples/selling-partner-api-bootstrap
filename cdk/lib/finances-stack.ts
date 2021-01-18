@@ -6,18 +6,12 @@ import * as cdk from '@aws-cdk/core';
 import { CommonParameter } from './commonParameter';
 
 
-export class FinancesStack extends cdk.Stack {
+export class FinancesStack extends cdk.Construct {
 
     constructor(scope: cdk.Construct, parameter: CommonParameter, props?: cdk.StackProps) {
-        super(scope, "FinancesStack", props);
+        super(scope, "FinancesStack");
 
         const apiTaskTableName = 'sp_api_task';
-
-        const eventBusPullFinancesTimer = new events.Rule(this, "pullFinancesTimer", {
-            description: "create a timer to trigger lambda function",
-            enabled: true,
-            schedule: events.Schedule.rate(cdk.Duration.minutes(1))
-        });
 
         const apiTaskTable = new Table(this, 'sp_api_task', {
             tableName: apiTaskTableName,
@@ -97,7 +91,7 @@ export class FinancesStack extends cdk.Stack {
 
         // dirty fix: https://github.com/aws-samples/aws-cdk-examples/issues/89#issuecomment-526758938 
         const eventTargets = require("@aws-cdk/aws-events-targets");
-        eventBusPullFinancesTimer.addTarget(new eventTargets.LambdaFunction(financesEventsList));
+        parameter.eventBusPullFinancesTimer.addTarget(new eventTargets.LambdaFunction(financesEventsList));
 
     }
 }

@@ -6,24 +6,14 @@ import * as cdk from '@aws-cdk/core';
 import { CommonParameter } from './commonParameter';
 
 
-export class OrderStack extends cdk.Stack {
+export class OrderStack extends cdk.Construct{
 
     getOrderListForOneSellerFunc: lambda.Function;
 
     constructor(scope: cdk.Construct, parameter: CommonParameter, props?: cdk.StackProps) {
-        super(scope, "OrderStack", props);
+        super(scope, "OrderStack");
 
         const ordersTableName = 'amz_sp_api_orders';
-
-
-        // EventBridge rule to set a timer in order to peridically pull for new order 
-        // Scheduled rules are supported only on the default event bus. 
-        const eventBusPullOrderTimer = new events.Rule(this, "pullOrderTimer", {
-            description: "create a timer to trigger lambda function",
-            enabled: true,
-            schedule: events.Schedule.rate(cdk.Duration.minutes(1))
-        });
-
 
         const ordersTalbe = new Table(this, 'amz_sp_api_orders', {
             tableName: ordersTableName,
@@ -95,6 +85,6 @@ export class OrderStack extends cdk.Stack {
         // dirty fix: https://github.com/aws-samples/aws-cdk-examples/issues/89#issuecomment-526758938 
         const eventTargets = require("@aws-cdk/aws-events-targets");
         // Event bus time will trigger the order check action.
-        eventBusPullOrderTimer.addTarget(new eventTargets.LambdaFunction(getAllSellerCredentialsAndPullFunc));
+        parameter.eventBusPullOrderTimer.addTarget(new eventTargets.LambdaFunction(getAllSellerCredentialsAndPullFunc));
     }
 }

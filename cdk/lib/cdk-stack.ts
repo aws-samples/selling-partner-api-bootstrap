@@ -17,7 +17,7 @@ import { OrderStack } from './order-stack';
 
 // TODO rename the class as SpApi
 export class SpApi extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, spapi_role_arn: string, props?: cdk.StackProps) {
+  constructor(scope: cdk.App, id: string, spapi_role_arn: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     var spapiRole = spapi_role_arn;
@@ -25,12 +25,12 @@ export class SpApi extends cdk.Stack {
 
     const codeZip = path.join(__dirname, '../../lambda/build/distributions/lambda.zip');
 
-    const ssm_seller_central_app_credentials = ssm.StringParameter.fromSecureStringParameterAttributes(this,"seller_central_app_credentials",{ parameterName:seller_central_app_credentials, version:1});
+    const ssm_seller_central_app_credentials = ssm.StringParameter.fromSecureStringParameterAttributes(this, "seller_central_app_credentials", { parameterName: seller_central_app_credentials, version: 1 });
 
     if (!spapiRole) {
       spapiRole = this.initCredential();
     }
-    
+
     // The code that defines your stack goes here
 
     const { lambdaSG, vpc, redisCluster } = this.initInfra();
@@ -70,11 +70,11 @@ export class SpApi extends cdk.Stack {
     // dirty fix: https://github.com/aws-samples/aws-cdk-examples/issues/89#issuecomment-526758938 
     // const eventTargets = require("@aws-cdk/aws-events-targets");
     // eventBusNewOrderRule.addTarget(new eventTargets.LambdaFunction(getOneNewOrderFunc));
-    
+
 
     // Dynamodb table
     const secrtesTableName = 'spapi-secrets';
-   
+
     const secretsTalbe = new Table(this, 'secrtesTable', {
       tableName: secrtesTableName,
       partitionKey: { name: 'seller_id', type: AttributeType.STRING },
@@ -83,15 +83,32 @@ export class SpApi extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST
     });
 
-    const parameter =  {
-      codeZip, lambdaSG, vpc, redisCluster, secrtesTableName, eventBus, seller_central_app_credentials, spapiRole, ssm_seller_central_app_credentials, secretsTalbe
-    }; 
+    // EventBridge rule to set a timer in order to peridically pull for new order 
+    // Scheduled rules are supported only on the default event bus. 
+    const eventBusPullOrderTimer = new events.Rule(this, "pullOrderTimer", {
+      description: "create a timer to trigger lambda function",
+      enabled: true,
+      schedule: events.Schedule.rate(cdk.Duration.minutes(1))
+    });
 
-    const orderStack =  new OrderStack(scope, parameter);
+    const eventBusPullFinancesTimer = new events.Rule(this, "pullFinancesTimer", {
+      description: "create a timer to trigger lambda function",
+      enabled: true,
+      schedule: events.Schedule.rate(cdk.Duration.minutes(1))
+    });
 
-    const financesStack = new FinancesStack(scope, parameter);
-    
-    
+
+    const parameter = {
+      codeZip, lambdaSG, vpc, redisCluster, secrtesTableName,
+       eventBus, eventBusPullOrderTimer, eventBusPullFinancesTimer, 
+       seller_central_app_credentials, spapiRole, ssm_seller_central_app_credentials, secretsTalbe
+    };
+
+    const orderStack = new OrderStack(this, parameter);
+
+    const financesStack = new FinancesStack(this, parameter);
+
+
 
     // Subscribe the event
     const spapiEventQueue = new sqs.Queue(this, "SpApiEventQueue", {
@@ -210,3 +227,7 @@ export class SpApi extends cdk.Stack {
     return spapi_role.roleArn;
   }
 }
+
+//const app = new cdk.App();
+//new SpApi(app, "spapi");
+//app.synth();
