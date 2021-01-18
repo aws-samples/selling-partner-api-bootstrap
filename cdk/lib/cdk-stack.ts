@@ -150,12 +150,12 @@ export class SpApi extends cdk.Stack {
     });
     secretsTalbe.grantReadData(eventSubscriptionFunc)
 
-    // add api gateway for lambda
-    const api = new apigw.RestApi(this, "sp-api-subscription");
+    // // add api gateway for lambda
+    // const api = new apigw.RestApi(this, "sp-api-subscription");
 
-    // This is used to trigger the SP-API event subscription, in a complete project this lambda should be triggered by seller register event.
-    const integration = new apigw.LambdaIntegration(eventSubscriptionFunc);
-    api.root.addMethod("GET", integration);
+    // // This is used to trigger the SP-API event subscription, in a complete project this lambda should be triggered by seller register event.
+    // const integration = new apigw.LambdaIntegration(eventSubscriptionFunc);
+    // api.root.addMethod("GET", integration);
 
   }
 
