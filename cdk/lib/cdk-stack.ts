@@ -108,15 +108,16 @@ export class SpApi extends cdk.Stack {
 
     const financesStack = new FinancesStack(this, parameter);
 
-
-
     // Subscribe the event
     const spapiEventQueue = new sqs.Queue(this, "SpApiEventQueue", {
       visibilityTimeout: Duration.seconds(900)
     });
 
     // The principal is defined by SP API - it will put event to the queue.
-    spapiEventQueue.grantSendMessages(new iam.AccountPrincipal('437568002678'))
+    // TODO for China Region we need to disable the event subscription 
+    //      and it should controlled by a variable.
+    
+    // spapiEventQueue.grantSendMessages(new iam.AccountPrincipal('437568002678'))
 
     const logOnlyFunc = new lambda.Function(this, "LogOnly", {
       runtime: lambda.Runtime.JAVA_8,
