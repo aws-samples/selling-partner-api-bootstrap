@@ -20,6 +20,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS orders_ext (
     isprime             	boolean,
     isglobalexpressenabled	boolean,
     ispremiumorder      	boolean,
+    ordertotalamount        int,
     issoldbyab          	boolean
     )
 PARTITIONED BY (date string)
@@ -83,7 +84,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS orderitems_ext (
     quantityshipped            int,
     itemprice_currencycode     string,
     itemprice_amount           int,
-    datetime                   TIMESTAMP
+    eventtime                  TIMESTAMP
     )
 PARTITIONED BY (date string)
 ROW FORMAT  serde 'org.apache.hive.hcatalog.data.JsonSerDe'
