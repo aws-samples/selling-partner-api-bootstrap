@@ -24,6 +24,14 @@ export class OrderStack extends cdk.Construct{
             billingMode: BillingMode.PAY_PER_REQUEST
         });
 
+        // EventBridge rule to set a timer in order to peridically pull for new order 
+        // Scheduled rules are supported only on the default event bus. 
+        const eventBusPullOrderTimer = new events.Rule(this, "pullOrderTimer", {
+            description: "create a timer to trigger lambda function",
+            enabled: true,
+            schedule: events.Schedule.rate(cdk.Duration.minutes(1))
+        });
+
         //For order getData
         this.getOrderListForOneSellerFunc = new lambda.Function(this, "GetOrderListForOneSeller", {
             runtime: lambda.Runtime.JAVA_8,
@@ -85,6 +93,6 @@ export class OrderStack extends cdk.Construct{
         // dirty fix: https://github.com/aws-samples/aws-cdk-examples/issues/89#issuecomment-526758938 
         const eventTargets = require("@aws-cdk/aws-events-targets");
         // Event bus time will trigger the order check action.
-        parameter.eventBusPullOrderTimer.addTarget(new eventTargets.LambdaFunction(getAllSellerCredentialsAndPullFunc));
+        eventBusPullOrderTimer.addTarget(new eventTargets.LambdaFunction(getAllSellerCredentialsAndPullFunc));
     }
 }

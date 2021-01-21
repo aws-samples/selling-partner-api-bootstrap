@@ -22,6 +22,12 @@ export class FinancesStack extends cdk.Construct {
             billingMode: BillingMode.PAY_PER_REQUEST
         });
 
+        const eventBusPullFinancesTimer = new events.Rule(this, "pullFinancesTimer", {
+            description: "create a timer to trigger lambda function",
+            enabled: true,
+            schedule: events.Schedule.rate(cdk.Duration.minutes(1))
+          });
+      
         const financialShipmentEventTableName = 'amz_sp_api_financial_shipment_event';
         const financialshipmentEventTable = new Table(this, 'amz_sp_api_financial_shipment_event', {
             tableName: financialShipmentEventTableName,
@@ -91,7 +97,7 @@ export class FinancesStack extends cdk.Construct {
 
         // dirty fix: https://github.com/aws-samples/aws-cdk-examples/issues/89#issuecomment-526758938 
         const eventTargets = require("@aws-cdk/aws-events-targets");
-        parameter.eventBusPullFinancesTimer.addTarget(new eventTargets.LambdaFunction(financesEventsList));
+        eventBusPullFinancesTimer.addTarget(new eventTargets.LambdaFunction(financesEventsList));
 
     }
 }

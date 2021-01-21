@@ -38,40 +38,6 @@ export class SpApi extends cdk.Stack {
     // Create EventBridge
     const eventBus = new events.EventBus(this, "sp-api", { eventBusName: "sp-api" });
 
-    // const getOneNewOrderFunc = new lambda.Function(this, "GetOneNewOrder", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambda.Code.fromAsset(codeZip),
-    //   handler: 'cn.amazon.aws.rp.spapi.lambda.order.GetOneNewOrder',
-    //   securityGroups: [lambdaSG],
-    //   vpc,
-    //   environment: {
-    //     REDIS_URL: redisCluster.attrRedisEndpointAddress,
-    //     EVENT_BUS_NAME: eventBus.eventBusName
-    //   },
-    //   timeout: cdk.Duration.seconds(900), // We may retry on throttling
-    //   memorySize: 1024,
-    //   tracing: lambda.Tracing.ACTIVE,
-    //   retryAttempts: 0 // Retry should be controled by request limiter.
-    // });
-
-    // EventBridge rule to route newOrder
-    // const eventBusNewOrderRule = new events.Rule(this, "newOrderRule", {
-    //   description: "Send new order to Lambda.",
-    //   enabled: true,
-    //   eventBus: eventBus,
-    //   eventPattern: {
-    //     source: ["com.aws.rapidprototyping.spapi"],
-    //     // This filed will carry seller_id used to get seller secretes from dynamodb.
-    //     // E.G newOrder||seller_jim
-    //     detailType: ["{\"prefix\":\"newOrder||\"}"]
-    //   }
-    // });
-
-    // dirty fix: https://github.com/aws-samples/aws-cdk-examples/issues/89#issuecomment-526758938 
-    // const eventTargets = require("@aws-cdk/aws-events-targets");
-    // eventBusNewOrderRule.addTarget(new eventTargets.LambdaFunction(getOneNewOrderFunc));
-
-
     // Dynamodb table
     const secrtesTableName = 'spapi-secrets';
 
@@ -83,25 +49,9 @@ export class SpApi extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST
     });
 
-    // EventBridge rule to set a timer in order to peridically pull for new order 
-    // Scheduled rules are supported only on the default event bus. 
-    const eventBusPullOrderTimer = new events.Rule(this, "pullOrderTimer", {
-      description: "create a timer to trigger lambda function",
-      enabled: true,
-      schedule: events.Schedule.rate(cdk.Duration.minutes(1))
-    });
-
-    const eventBusPullFinancesTimer = new events.Rule(this, "pullFinancesTimer", {
-      description: "create a timer to trigger lambda function",
-      enabled: true,
-      schedule: events.Schedule.rate(cdk.Duration.minutes(1))
-    });
-
-
     const parameter = {
       codeZip, lambdaSG, vpc, redisCluster, secrtesTableName,
-       eventBus, eventBusPullOrderTimer, eventBusPullFinancesTimer, 
-       seller_central_app_credentials, spapiRole, ssm_seller_central_app_credentials, secretsTalbe
+       eventBus, seller_central_app_credentials, spapiRole, ssm_seller_central_app_credentials, secretsTalbe
     };
 
     const orderStack = new OrderStack(this, parameter);

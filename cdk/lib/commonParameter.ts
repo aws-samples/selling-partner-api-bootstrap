@@ -12,8 +12,6 @@ export interface CommonParameter {
     readonly redisCluster: elasticache.CfnCacheCluster;
     readonly secrtesTableName: string;
     readonly eventBus: events.EventBus;
-    readonly eventBusPullOrderTimer: events.Rule;
-    readonly eventBusPullFinancesTimer: events.Rule;
     readonly seller_central_app_credentials: string;
     readonly spapiRole: string;
     readonly ssm_seller_central_app_credentials: ssm.IStringParameter
