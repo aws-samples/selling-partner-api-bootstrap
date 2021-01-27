@@ -5,12 +5,9 @@ import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.ReportsApi;
 import cn.amazon.aws.rp.spapi.clients.model.CreateReportResponse;
 import cn.amazon.aws.rp.spapi.clients.model.CreateReportSpecification;
-import cn.amazon.aws.rp.spapi.constants.DateConstants;
 import cn.amazon.aws.rp.spapi.lambda.requestlimiter.Invokable;
-import org.threeten.bp.LocalDateTime;
-import org.threeten.bp.OffsetDateTime;
-import org.threeten.bp.ZoneOffset;
-import org.threeten.bp.format.DateTimeFormatter;
+import cn.amazon.aws.rp.spapi.utils.DateUtil;
+
 
 import java.util.Map;
 
@@ -36,10 +33,12 @@ public class FulfilledShipmentsRequestReportApiInvoker implements Invokable<Crea
 		final String endTime = (String) input.get("endTime");
 		final String reportType = (String) input.get("reportType");
 		specification.setReportType(reportType);
-		specification.setDataStartTime(OffsetDateTime.of(LocalDateTime.parse(startTime, DateTimeFormatter.ofPattern(DateConstants.DATE_TIME_FORMAT)), ZoneOffset.UTC));
-		specification.setDataEndTime(OffsetDateTime.of(LocalDateTime.parse(endTime, DateTimeFormatter.ofPattern(DateConstants.DATE_TIME_FORMAT)), ZoneOffset.UTC));
+		specification.setDataStartTime(DateUtil.getOf(startTime));
+		specification.setDataEndTime(DateUtil.getOf(endTime));
 		return api.createReportWithHttpInfo(specification);
 	}
+
+
 
 	@Override
 	public String getRateLimiterNameSuffix() {

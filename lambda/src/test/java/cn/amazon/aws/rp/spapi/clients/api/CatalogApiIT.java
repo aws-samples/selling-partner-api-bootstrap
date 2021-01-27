@@ -18,7 +18,9 @@ class CatalogApiIT {
         credentials.setSeller_id("seller_jim");
 
         CatalogApi catalogApi = CatalogApi.buildCatalogApi(credentials);
-        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B0892F2531");
+//        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B0892F2531");
+        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B08KSWC82P");
+
         System.out.println(getCatalogItemResponse.getPayload());
     }
 }

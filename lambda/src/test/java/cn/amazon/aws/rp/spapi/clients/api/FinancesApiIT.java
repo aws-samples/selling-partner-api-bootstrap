@@ -5,6 +5,7 @@ import cn.amazon.aws.rp.spapi.clients.model.GetCatalogItemResponse;
 import cn.amazon.aws.rp.spapi.clients.model.ListFinancialEventsResponse;
 import cn.amazon.aws.rp.spapi.constants.DateConstants;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.OffsetDateTime;
@@ -13,6 +14,7 @@ import org.threeten.bp.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Ignore
 class FinancesApiIT {
 
     @Test
