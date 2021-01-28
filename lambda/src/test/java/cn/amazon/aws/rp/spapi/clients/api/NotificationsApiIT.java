@@ -3,32 +3,49 @@ package cn.amazon.aws.rp.spapi.clients.api;
 import cn.amazon.aws.rp.spapi.clients.ApiException;
 import cn.amazon.aws.rp.spapi.clients.model.*;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
+import cn.amazon.aws.rp.spapi.enums.NotificationType;
+import cn.amazon.aws.rp.spapi.utils.CredentialsHelper;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Ignore
 class NotificationsApiIT {
 
+    static private final Logger logger = LoggerFactory.getLogger(NotificationsApiIT.class);
+
+    private NotificationsApi initWithAppCredentials() throws NoSuchFieldException, IllegalAccessException {
+        SellerCredentials credentials = CredentialsHelper.getAppCredentials();
+
+        return NotificationsApi.buildNotificationGrantLessApi(credentials);
+    }
+
+    private NotificationsApi initWithSellerCredentials() throws NoSuchFieldException, IllegalAccessException {
+        SellerCredentials credentials = CredentialsHelper.getSellerCredentials();
+        return NotificationsApi.buildNotificationApi(credentials);
+    }
+
     @Test
     void createDestinationEventBridge() throws NoSuchFieldException, IllegalAccessException, ApiException {
-        NotificationsApi notificationsApi = initWithOutCredentials();
+        NotificationsApi notificationsApi = initWithAppCredentials();
 
         DestinationResourceSpecification spec = new DestinationResourceSpecification();
         EventBridgeResourceSpecification eventBridgeResourceSpecification = new EventBridgeResourceSpecification();
         eventBridgeResourceSpecification.setAccountId("716414967168");
-        eventBridgeResourceSpecification.setRegion("us-west-2");
+        eventBridgeResourceSpecification.setRegion("us-east-2");
         spec.setEventBridge(eventBridgeResourceSpecification);
         CreateDestinationRequest createDestinationRequest = new CreateDestinationRequest();
         createDestinationRequest.setName("Integration test 02");
         createDestinationRequest.setResourceSpecification(spec);
         CreateDestinationResponse response = notificationsApi.createDestination(createDestinationRequest);
-        System.out.println(response.getPayload());
+        logger.info("payload is {}",response.getPayload());
 
     }
 
     @Test
     void createDestinationSQS() throws NoSuchFieldException, IllegalAccessException, ApiException {
-        NotificationsApi notificationsApi = initWithOutCredentials();
+        NotificationsApi notificationsApi = initWithAppCredentials();
 
         DestinationResourceSpecification spec = new DestinationResourceSpecification();
 
@@ -40,131 +57,44 @@ class NotificationsApiIT {
         createDestinationRequest.setResourceSpecification(spec);
         CreateDestinationResponse response = notificationsApi.createDestination(createDestinationRequest);
         System.out.println(response.getPayload());
-//        01e471b0-a0bc-4627-8854-cb597f812da2
-
-        // self f5f34d5a-4731-4fc2-90cf-81b25c385416
     }
-
-    private NotificationsApi initWithOutCredentials() throws NoSuchFieldException, IllegalAccessException {
-        SellerCredentials credentials = new SellerCredentials();
-        credentials.setSeller_id("seller_jim");
-
-        return NotificationsApi.buildNotificationGrantLessApi(credentials);
-    }
-
-    private NotificationsApi initWithCredentials() throws NoSuchFieldException, IllegalAccessException {
-        SellerCredentials credentials = new SellerCredentials();
-//        credentials.setLWAAuthorizationCredentials_refreshToken("Atzr|IwEBIJ27mtx3w0pHV9Rc8TLfmcGX2yEQnC27-88Ya_uI8FqOdAXrdCTzJucIhj1nc-XHkHNxRbBosXdF33nJtDYOQYvql_FGwYBmPMAmu24YybdD3BblXut81LxL6HKTzfF2Ebgi_lF-KmHSxoz4glZCgH8a-2jbOZJbnvJKb_bAZLxWfsgLawhqlHrhyhpSoCAclVfvFGzWG2Wv1hJDgSV2ggMf-4Y26TJ58rM-gMLuL4ipjeOG7QWb7pLcdgcly5XiMuLJLGNVf8h_1-OznfgFgnroYrORlRRkCQkfdheDO_BT0BNj0GPm3bX5u3wsY9go4To");
-        //self
-        credentials.setLWAAuthorizationCredentials_refreshToken("Atzr|IwEBIBOvQp_eXz1bdpUVtjNX7C_cEp50Z6uQ5iQbv-VQOY7H5AYlB5DR87K73AH_oNJc0DSD0wDqNaDFNxVjVbv0forJR4ti8XVZF7VXUQJxNAWjlByAERRO3QXqItyaetkBLhlLdGdVHQ3bzXtVkvRZmYqOivnSz9gRNxkUMdMQu9vPRZWNgitX-oVgSTfS-mJzeeEpiynWfviMwKRB9sfcGvQLM17NME6lFjA0-OnQgVh-8wQiolrNRzoeupVeud7eXbgB17YaM5Bk6XhtLAWSJCL5oYqN6dS6OVYWQiqrPShlCMu2ot1mOf9uRwfVhXOfy-Y");
-        credentials.setSeller_id("seller_jim");
-
-        return NotificationsApi.buildNotificationApi(credentials);
-    }
-
 
     @Test
-    void createSubscription() throws NoSuchFieldException, IllegalAccessException {
-        NotificationsApi notificationsApi = initWithCredentials();
+    void createSubscription_BRANDED_ITEM_CONTENT_CHANGE() throws NoSuchFieldException, IllegalAccessException {
+        NotificationsApi notificationsApi = initWithSellerCredentials();
 
 
         CreateSubscriptionRequest request = new CreateSubscriptionRequest();
-        request.setDestinationId("01e471b0-a0bc-4627-8854-cb597f812da2");
+        request.setDestinationId("6da94999-4b4d-4a11-b1e7-a951953648db");
         request.setPayloadVersion("1.0");
         CreateSubscriptionResponse response = null;
-        try {
-            System.out.println("ANY_OFFER_CHANGED");
-            response = notificationsApi.createSubscription(request,"ANY_OFFER_CHANGED");
-        }catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("FEED_PROCESSING_FINISHED");
-        try {
-            response = notificationsApi.createSubscription(request,"FEED_PROCESSING_FINISHED");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("FBA_OUTBOUND_SHIPMENT_STATUS");
-        try {
-            response = notificationsApi.createSubscription(request,"FBA_OUTBOUND_SHIPMENT_STATUS");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("FEE_PROMOTION");
-        try {
-            response = notificationsApi.createSubscription(request,"FEE_PROMOTION");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("FULFILLMENT_ORDER_STATUS");
-        try {
-            response = notificationsApi.createSubscription(request,"FULFILLMENT_ORDER_STATUS");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("REPORT_PROCESSING_FINISHED");
-        try {
-            response = notificationsApi.createSubscription(request,"REPORT_PROCESSING_FINISHED");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("BRANDED_ITEM_CONTENT_CHANGE");
-        try {
-            response = notificationsApi.createSubscription(request,"BRANDED_ITEM_CONTENT_CHANGE");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("ITEM_PRODUCT_TYPE_CHANGE");
-        try {
-            response = notificationsApi.createSubscription(request,"ITEM_PRODUCT_TYPE_CHANGE");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("MFN_ORDER_STATUS_CHANGE");
-        try {
-            response = notificationsApi.createSubscription(request,"MFN_ORDER_STATUS_CHANGE");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        System.out.println("B2B_ANY_OFFER_CHANGED");
-        try {
-            response = notificationsApi.createSubscription(request,"B2B_ANY_OFFER_CHANGED");
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
-        if(response != null) {
-            System.out.println(response.getPayload());
-//        response = notificationsApi.createSubscription(request,"ITEM_PRODUCT_TYPE_CHANGE");
-//        System.out.println(response.getPayload());
-        }
 
+        logger.info("REPORT_PROCESSING_FINISHED");
+        try {
+            response = notificationsApi.createSubscription(request,NotificationType.BRANDED_ITEM_CONTENT_CHANGE.name());
+            logger.info("payload is {}", response.getPayload());
+        } catch (ApiException e) {
+            logger.error("error is {}",e);
+        }
     }
 
-
     @Test
-    void createSubscriptionSQS() throws NoSuchFieldException, IllegalAccessException {
-        NotificationsApi notificationsApi = initWithCredentials();
+    void createSubscription_REPORT_PROCESSING_FINISHED() throws NoSuchFieldException, IllegalAccessException {
+        NotificationsApi notificationsApi = initWithSellerCredentials();
 
 
         CreateSubscriptionRequest request = new CreateSubscriptionRequest();
-        request.setDestinationId("f5f34d5a-4731-4fc2-90cf-81b25c385416");
+        request.setDestinationId("f0b4bd2d-7cec-42c8-815a-1e62f53732ee");
         request.setPayloadVersion("1.0");
         CreateSubscriptionResponse response = null;
 
-        System.out.println("REPORT_PROCESSING_FINISHED");
+        logger.info("REPORT_PROCESSING_FINISHED");
         try {
-            response = notificationsApi.createSubscription(request,"REPORT_PROCESSING_FINISHED");
+            response = notificationsApi.createSubscription(request,NotificationType.REPORT_PROCESSING_FINISHED.name());
+            logger.info("payload is {}", response.getPayload());
         } catch (ApiException e) {
-            e.printStackTrace();
+            logger.error("error is {}",e);
         }
-
-
-        if(response != null) {
-            System.out.println(response.getPayload());
-//        response = notificationsApi.createSubscription(request,"ITEM_PRODUCT_TYPE_CHANGE");
-//        System.out.println(response.getPayload());
-        }
-
     }
 
     @Test
@@ -173,7 +103,7 @@ class NotificationsApiIT {
 
     @Test
     void getDestinations() throws NoSuchFieldException, IllegalAccessException, ApiException {
-        NotificationsApi notificationsApi = initWithOutCredentials();
+        NotificationsApi notificationsApi = initWithAppCredentials();
         GetDestinationsResponse response = notificationsApi.getDestinations();
         System.out.println(response.getPayload());
 
@@ -181,8 +111,8 @@ class NotificationsApiIT {
 
     @Test
     void getSubscription() throws NoSuchFieldException, IllegalAccessException, ApiException {
-        NotificationsApi notificationsApi = initWithCredentials();
-        GetSubscriptionResponse response = notificationsApi.getSubscription("REPORT_PROCESSING_FINISHED");
+        NotificationsApi notificationsApi = initWithSellerCredentials();
+        GetSubscriptionResponse response = notificationsApi.getSubscription(NotificationType.REPORT_PROCESSING_FINISHED.name());
         System.out.println(response.getPayload());
 //        f0fe4b72-41ee-4acb-80c6-5ba78a2dca64
     }
@@ -238,8 +168,8 @@ class NotificationsApiIT {
 
     @Test
     void deleteSubscriptionById() throws NoSuchFieldException, IllegalAccessException, ApiException {
-        NotificationsApi notificationsApi = initWithCredentials();
-        DeleteSubscriptionByIdResponse response =notificationsApi.deleteSubscriptionById("57eba68e-285b-487e-a174-be2878615456","REPORT_PROCESSING_FINISHED");
+        NotificationsApi notificationsApi = initWithSellerCredentials();
+        DeleteSubscriptionByIdResponse response =notificationsApi.deleteSubscriptionById("cf1095ca-f4b1-4ad3-9a87-06fc692aac52","REPORT_PROCESSING_FINISHED");
         System.out.println(response);
     }
 
