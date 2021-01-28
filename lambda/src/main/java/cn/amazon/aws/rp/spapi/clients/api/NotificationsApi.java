@@ -1105,12 +1105,12 @@ public class NotificationsApi {
      */
     public static NotificationsApi buildNotificationGrantLessApi(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
 
-        return (new NotificationsApi.Builder())
+        return (new NotificationsApi.GrantLessBuilder())
                 .build(jsonSellerSecrets);
     }
 
     public static NotificationsApi buildNotificationApi(SellerCredentials jsonSellerSecrets) throws NoSuchFieldException, IllegalAccessException {
-        return (new NotificationsApi.GrantLessBuilder())
+        return (new NotificationsApi.Builder())
                 .build(jsonSellerSecrets);
     }
 }

@@ -11,5 +11,6 @@
         </Root>
         <Logger name="software.amazon.awssdk" level="WARN" />
         <Logger name="software.amazon.awssdk.request" level="DEBUG" />
+        <Logger name="com.amazonaws.auth.profile.internal" level="ERROR" />
     </Loggers>
 </Configuration>

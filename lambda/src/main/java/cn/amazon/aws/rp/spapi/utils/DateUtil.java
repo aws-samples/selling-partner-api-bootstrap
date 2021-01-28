@@ -507,4 +507,8 @@ public class DateUtil {
 		DateTimeFormatter df = DateTimeFormatter.ofPattern(DATE_TIME);
 		return df.format(date);
 	}
+
+	public static org.threeten.bp.OffsetDateTime getOf(String startTime) {
+		return org.threeten.bp.OffsetDateTime.of(org.threeten.bp.LocalDateTime.parse(startTime, org.threeten.bp.format.DateTimeFormatter.ofPattern(DateConstants.DATE_TIME_FORMAT)), org.threeten.bp.ZoneOffset.UTC);
+	}
 }
