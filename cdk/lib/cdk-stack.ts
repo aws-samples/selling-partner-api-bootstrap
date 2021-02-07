@@ -124,6 +124,7 @@ export class SpApi extends cdk.Stack {
         name: 'public',
         subnetType: ec2.SubnetType.PUBLIC
       }]
+      // Consider create Isolated subnet for Workspace.
     });
 
 

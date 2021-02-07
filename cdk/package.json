@@ -31,6 +31,7 @@
     "@aws-cdk/aws-s3": "1.81.0",
     "@aws-cdk/aws-sqs": "1.81.0",
     "@aws-cdk/core": "1.81.0",
+    "@aws-cdk/aws-kms": "1.81.0",
     "source-map-support": "0.5.19"
   }
 }

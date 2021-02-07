@@ -4,6 +4,7 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
 import { CommonParameter } from './commonParameter';
+        import * as ec2 from '@aws-cdk/aws-ec2';
 
 
 export class FinancesStack extends cdk.Construct {
