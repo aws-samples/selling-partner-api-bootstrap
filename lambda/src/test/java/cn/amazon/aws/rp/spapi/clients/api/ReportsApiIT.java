@@ -62,9 +62,9 @@ class ReportsApiIT {
     void createReport() throws NoSuchFieldException, IllegalAccessException, ApiException {
         ReportsApi reportsApi = initWithCredentials();
         CreateReportSpecification createReportSpecification = new CreateReportSpecification();
-        createReportSpecification.setDataStartTime(DateUtil.getOf("2020-09-01 03:22:53"));
-        createReportSpecification.setDataEndTime(DateUtil.getOf("2020-09-30 03:22:53"));
-        createReportSpecification.setReportType(ReportTypeEnum.GET_FLAT_FILE_OPEN_LISTINGS_DATA.name());
+//        createReportSpecification.setDataStartTime(DateUtil.getOf("2020-09-01 03:22:53"));
+//        createReportSpecification.setDataEndTime(DateUtil.getOf("2020-09-30 03:22:53"));
+        createReportSpecification.setReportType(ReportTypeEnum.GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA.name());
         createReportSpecification.setMarketplaceIds(List.of("ATVPDKIKX0DER"));
         CreateReportResponse reportResponse = reportsApi.createReport(createReportSpecification);
         System.out.println(reportResponse.getPayload());
@@ -104,7 +104,7 @@ class ReportsApiIT {
     void getReport() throws NoSuchFieldException, IllegalAccessException, ApiException {
         ReportsApi reportsApi = initWithCredentials();
 
-        GetReportResponse reportResponse = reportsApi.getReport("52211018655");
+        GetReportResponse reportResponse = reportsApi.getReport("53864018677");
         logger.info("payload is {}",reportResponse.getPayload());
 
     }
@@ -124,7 +124,7 @@ class ReportsApiIT {
     @Test
     void getReportDocument() throws NoSuchFieldException, IllegalAccessException, ApiException {
         ReportsApi reportsApi = initWithCredentials();
-        GetReportDocumentResponse reportDocument = reportsApi.getReportDocument("amzn1.tortuga.3.c84f19b7-59ff-46b5-9fbf-62042c31a3c8.T1XDH2W583L6U4");
+        GetReportDocumentResponse reportDocument = reportsApi.getReportDocument("amzn1.tortuga.3.7a74b81e-936f-459e-8fdd-44b032f29a66.T3U3FWBY2DYV4F");
         System.out.println(reportDocument.getPayload());
 
     }
@@ -132,7 +132,7 @@ class ReportsApiIT {
     @Test
     void downloadAndDecryptReport() throws NoSuchFieldException, IllegalAccessException, ApiException {
         ReportsApi reportsApi = initWithCredentials();
-        GetReportDocumentResponse reportDocument = reportsApi.getReportDocument("amzn1.tortuga.3.d4b0eaf6-ef75-4140-abb0-d500460b0c5b.T1UAG0M6BBWYFV");
+        GetReportDocumentResponse reportDocument = reportsApi.getReportDocument("amzn1.tortuga.3.7a74b81e-936f-459e-8fdd-44b032f29a66.T3U3FWBY2DYV4F");
         String getCompressionAlgorithm = reportDocument.getPayload().getCompressionAlgorithm() == null? null:reportDocument.getPayload().getCompressionAlgorithm().getValue();
         Utils.downloadAndDecrypt(reportDocument.getPayload().getEncryptionDetails().getKey(),
                 reportDocument.getPayload().getEncryptionDetails().getInitializationVector(),

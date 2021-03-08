@@ -16,11 +16,17 @@ class CatalogApiIT {
 
         CatalogApi catalogApi = CatalogApi.buildCatalogApi(credentials);
 
-        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B07ZQSSKY4"); //relationships: null
+        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B08LKFB6RC"); //relationships: null
 
 //        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B08LKFB6RC"); //relationships: null
-//        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B08KSWC82P");'
+//        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B08KSWC82P");
 
-        System.out.println(getCatalogItemResponse.getPayload());
+        //Japan
+
+//        GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("A39IBJ37TRP1C6","B07NS381GK"); //relationships: null
+
+
+
+        System.out.println(getCatalogItemResponse.getPayload().getRelationships());
     }
 }

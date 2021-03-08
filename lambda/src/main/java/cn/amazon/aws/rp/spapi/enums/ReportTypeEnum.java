@@ -35,4 +35,5 @@ public enum ReportTypeEnum {
 
 	GET_AMAZON_FULFILLED_SHIPMENTS_DATA,
 
+
 }

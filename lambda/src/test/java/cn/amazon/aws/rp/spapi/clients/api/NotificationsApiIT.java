@@ -33,14 +33,14 @@ class NotificationsApiIT {
         DestinationResourceSpecification spec = new DestinationResourceSpecification();
         EventBridgeResourceSpecification eventBridgeResourceSpecification = new EventBridgeResourceSpecification();
         eventBridgeResourceSpecification.setAccountId("716414967168");
-        eventBridgeResourceSpecification.setRegion("us-east-2");
+        eventBridgeResourceSpecification.setRegion("us-west-1");
         spec.setEventBridge(eventBridgeResourceSpecification);
         CreateDestinationRequest createDestinationRequest = new CreateDestinationRequest();
-        createDestinationRequest.setName("Integration test 02");
+        createDestinationRequest.setName("Guangzhou workshop");
         createDestinationRequest.setResourceSpecification(spec);
         CreateDestinationResponse response = notificationsApi.createDestination(createDestinationRequest);
         logger.info("payload is {}",response.getPayload());
-
+        //2ba4d2b4-33be-43ae-8197-e038e41da9e8
     }
 
     @Test
@@ -65,7 +65,7 @@ class NotificationsApiIT {
 
 
         CreateSubscriptionRequest request = new CreateSubscriptionRequest();
-        request.setDestinationId("6da94999-4b4d-4a11-b1e7-a951953648db");
+        request.setDestinationId("2ba4d2b4-33be-43ae-8197-e038e41da9e8");
         request.setPayloadVersion("1.0");
         CreateSubscriptionResponse response = null;
 
@@ -84,7 +84,7 @@ class NotificationsApiIT {
 
 
         CreateSubscriptionRequest request = new CreateSubscriptionRequest();
-        request.setDestinationId("f0b4bd2d-7cec-42c8-815a-1e62f53732ee");
+        request.setDestinationId("2ba4d2b4-33be-43ae-8197-e038e41da9e8");
         request.setPayloadVersion("1.0");
         CreateSubscriptionResponse response = null;
 
