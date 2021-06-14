@@ -44,12 +44,18 @@ seller_central_app_credentials 是用于应用程序用LWA交互凭证使用,来
 
 
 ## Useful commands
+
+**Ubuntu update the nodejs**
+ * sudo npm install -g n
+ * sudo n lts
+ * node -v
+ * npm -v 
+
 **Setup CDK**
  * `npm install -g aws-cdk`
  * `npm install -g typescript`
  * `npm link typescript`
- * `npm install @aws-cdk/aws-s3 @aws-cdk/aws-lambda @aws-cdk/aws-events-targets @aws-cdk/aws-dynamodb @aws-cdk/aws-sqs`
- * `npm install @aws-cdk/core`
+ * `npm update` # install all cdk modules
  * `npm install -g aws-cdk@latest` -- In case CDK need upgrades.
 
  The solution for most of CDK issues can be found [here](https://docs.aws.amazon.com/cdk/latest/guide/troubleshooting.html) .
