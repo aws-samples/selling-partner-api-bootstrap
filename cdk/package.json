@@ -26,12 +26,13 @@
     "@aws-cdk/aws-ec2": "1.108.0",
     "@aws-cdk/aws-elasticache": "1.108.0",
     "@aws-cdk/aws-events-targets": "1.108.0",
+    "@aws-cdk/aws-kms": "1.108.0",
     "@aws-cdk/aws-lambda": "1.108.0",
     "@aws-cdk/aws-lambda-event-sources": "1.108.0",
     "@aws-cdk/aws-s3": "1.108.0",
     "@aws-cdk/aws-sqs": "1.108.0",
     "@aws-cdk/core": "1.108.0",
-    "@aws-cdk/aws-kms": "1.108.0",
-    "source-map-support": "0.5.19"
+    "source-map-support": "0.5.19",
+    "uuid": "^8.3.2"
   }
 }

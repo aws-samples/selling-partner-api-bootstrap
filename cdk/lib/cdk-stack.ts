@@ -17,7 +17,7 @@ import { OrderStack } from './order-stack';
 
 // TODO rename the class as SpApi
 export class SpApi extends cdk.Stack {
-  constructor(scope: cdk.App, id: string, spapi_role_arn: string, props?: cdk.StackProps) {
+  constructor(scope: cdk.App, id: string, spapi_role_arn: string = "", props?: cdk.StackProps) {
     super(scope, id, props);
 
     var spapiRole = spapi_role_arn;
@@ -27,7 +27,7 @@ export class SpApi extends cdk.Stack {
 
     const ssm_seller_central_app_credentials = ssm.StringParameter.fromSecureStringParameterAttributes(this, "seller_central_app_credentials", { parameterName: seller_central_app_credentials, version: 1 });
 
-    if (!spapiRole) {
+    if ("" == spapiRole) {
       spapiRole = this.initCredential();
     }
 

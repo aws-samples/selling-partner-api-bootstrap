@@ -46,10 +46,18 @@ seller_central_app_credentials 是用于应用程序用LWA交互凭证使用,来
 ## Useful commands
 
 **Ubuntu update the nodejs**
- * sudo npm install -g n
- * sudo n lts
- * node -v
- * npm -v 
+```bash
+sudo npm install -g n
+sudo n 14.12.0
+sudo npm uninstall -g cdk
+sudo npm install -g cdk
+rm -rf ./node_modules
+sudo npm install -g typescript
+sudo npm link typescript
+sudo npm install
+sudo cdk synth
+sudo cdk deploy 
+```
 
 **Setup CDK**
  * `npm install -g aws-cdk`
@@ -68,6 +76,7 @@ seller_central_app_credentials 是用于应用程序用LWA交互凭证使用,来
  * `cdk deploy`      deploy this stack to your default AWS account/region
  * `cdk diff`        compare deployed stack with current state
  * `cdk synth`       emits the synthesized CloudFormation template
+ * `sudo npm run cdk synth -- -v -o dist` Check CDK errors
 
  **Deply project**
 
@@ -85,5 +94,9 @@ After upgrade the CDK with `npm update -g aws-cdk` you may check if everything i
     1. Make sure your `package.json` lists the same CDK version.
     2. Nuke node_modules
     3. Run `npm install` again
+
+## Notes on deploy this solution at Ubuntu
+
+* Maker sure that you have NodeJS 14 installed first and then install CDK and anything else.
 
 
