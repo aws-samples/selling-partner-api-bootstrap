@@ -1,9 +1,12 @@
 package cn.amazon.aws.rp.spapi.enums;
 
 public enum AppstoreEndpoint {
-    NA("us-east-1","https://sandbox.sellingpartnerapi-na.amazon.com"),
-    EU("eu-west-1","https://sandbox.sellingpartnerapi-eu.amazon.com"),
-    FE("us-west-2","https://sandbox.sellingpartnerapi-fe.amazon.com");
+//    NA("us-east-1","https://sandbox.sellingpartnerapi-na.amazon.com"),
+//    EU("eu-west-1","https://sandbox.sellingpartnerapi-eu.amazon.com"),
+//    FE("us-west-2","https://sandbox.sellingpartnerapi-fe.amazon.com");
+    NA("us-east-1","https://sellingpartnerapi-na.amazon.com"),
+    EU("eu-west-1","https://sellingpartnerapi-eu.amazon.com"),
+    FE("us-west-2","https://sellingpartnerapi-fe.amazon.com");
 
     String endpoint;
     String region;
