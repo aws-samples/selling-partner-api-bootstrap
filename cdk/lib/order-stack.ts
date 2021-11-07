@@ -47,7 +47,7 @@ export class OrderStack extends cdk.Construct{
                 SELLER_CENTRAL_APP_CREDENTIALS: parameter.seller_central_app_credentials,
                 Role: parameter.spapiRole
             },
-            timeout: cdk.Duration.seconds(100),
+            timeout: cdk.Duration.seconds(900),
             memorySize: 1024,
             tracing: lambda.Tracing.ACTIVE,
             retryAttempts: 0 // Retry should be controled by request limiter.

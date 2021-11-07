@@ -102,7 +102,7 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
             final HashMap<String, Object> input = new HashMap<>();
             input.put("marketplaceIds", marketplaceId);
 //            String from = Helper.getIso8601Time(70);
-            final String from = "2020-08-01T03:22:53.290Z";// getIso8601Time(70);
+            final String from = "2020-01-01T03:22:53.290Z";// getIso8601Time(70);
             input.put("createdAfter", from);
 
             /*

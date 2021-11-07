@@ -1,18 +1,41 @@
 package cn.amazon.aws.rp.spapi.lambda.order;
 
+import cn.amazon.aws.rp.spapi.clients.ApiResponse;
+import cn.amazon.aws.rp.spapi.clients.api.SellersApi;
+import cn.amazon.aws.rp.spapi.clients.model.GetMarketplaceParticipationsResponse;
+import cn.amazon.aws.rp.spapi.clients.model.Marketplace;
+import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipation;
+import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipationList;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
+import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
+import cn.amazon.aws.rp.spapi.utils.Utils;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GetOrderListForOneSellerIT {
 
     @Test
-    void handleRequest() {
+    void handleRequest() throws Throwable {
+        String refreshToken = Utils.getEnv("refresh_token");
+
         GetOrderListForOneSeller getOrderListForOneSeller = new GetOrderListForOneSeller();
         SellerCredentials credentials = new SellerCredentials();
-        credentials.setLWAAuthorizationCredentials_refreshToken("Atzr|IwEBIJ27mtx3w0pHV9Rc8TLfmcGX2yEQnC27-88Ya_uI8FqOdAXrdCTzJucIhj1nc-XHkHNxRbBosXdF33nJtDYOQYvql_FGwYBmPMAmu24YybdD3BblXut81LxL6HKTzfF2Ebgi_lF-KmHSxoz4glZCgH8a-2jbOZJbnvJKb_bAZLxWfsgLawhqlHrhyhpSoCAclVfvFGzWG2Wv1hJDgSV2ggMf-4Y26TJ58rM-gMLuL4ipjeOG7QWb7pLcdgcly5XiMuLJLGNVf8h_1-OznfgFgnroYrORlRRkCQkfdheDO_BT0BNj0GPm3bX5u3wsY9go4To");
-        credentials.setSeller_id("seller_jim");
+        credentials.setLWAAuthorizationCredentials_refreshToken(refreshToken);
+        credentials.setSeller_id("seller_unit_test");
+
+        if(Utils.isNullOrEmpty(credentials.getMarketplaces())) {
+            final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipations = SellersApi.getMarketplaceParticipations(credentials);
+            final MarketplaceParticipationList payloadList = marketplaceParticipations.getData().getPayload();
+            final List<Marketplace> mktList = payloadList.stream().map(MarketplaceParticipation::getMarketplace).collect(Collectors.toList());
+            credentials.setMarketplaces(mktList);
+            SpApiSecretDao.updateMarketplace(credentials);
+
+        }
+
         getOrderListForOneSeller.handleRequest(credentials,null);
 
     }
