@@ -55,9 +55,11 @@ public class ApiProxy<R> {
             try {
                 result = ivk.invoke(input);
             } catch (ApiException e) {
-                // Retry
-                if (result.getStatusCode() == OVER_REQUEST_CODE) {
-                    logger.warn("SERVER SIDE LIMIT: going to retry due to request too frequently.");
+                if (result == null) {
+                    throw e;
+                } // Retry
+                else if (result.getStatusCode() == OVER_REQUEST_CODE) {
+                    logger.warn("SERVER SIDE LIMIT: going to retry due to request too frequently.", e);
                     result = retryInvk(input, sellerName);
                 }else{
                     throw e;

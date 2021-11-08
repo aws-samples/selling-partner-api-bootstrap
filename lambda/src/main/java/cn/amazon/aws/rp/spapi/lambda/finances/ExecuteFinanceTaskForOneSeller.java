@@ -58,8 +58,8 @@ public class ExecuteFinanceTaskForOneSeller implements RequestHandler<Object, In
     public void executeTask(SellerCredentials sellerCredentials) {
         try {
             //get task
-            final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
-            List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerTaskKey);
+            final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_TASKS;
+            List<SpApiTask> spApiTaskList = spApiTaskDao.getTaskList(sellerTaskKey);
             // If there is no any task, then create the init task.
             if (spApiTaskList.isEmpty()) {
                 SpApiTask task = new SpApiTask();
@@ -68,7 +68,7 @@ public class ExecuteFinanceTaskForOneSeller implements RequestHandler<Object, In
                 task.setStartTime("2020-08-01 00:00:00");
                 task.setEndTime("2020-08-02 00:00:00");
                 task.setTaskId(idWorker.nextId());
-                task.setTaskName(TaskConstants.LIST_FINANCIAL_EVENTS);
+                task.setTaskName(TaskConstants.LIST_FINANCIAL_TASKS);
                 task.setExecuteStatus(StatusEnum.INIT.getStatus());
                 spApiTaskDao.addTask(task);
                 spApiTaskList.add(task);
@@ -86,11 +86,12 @@ public class ExecuteFinanceTaskForOneSeller implements RequestHandler<Object, In
             }
             // Sync execution.
             sellerCredentials.getMarketplaces().forEach(marketplace -> {
+                //update task status
+                spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
+                // execute the task
                 requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
             });
 
-            //update task
-            spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
             //add a new task for the next 2 days.
             spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
         } catch (Throwable throwable) {

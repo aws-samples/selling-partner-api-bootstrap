@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 	}
 
 	@Override
-	public List<SpApiTask> getTask(String sellerKey) {
+	public List<SpApiTask> getTaskList(String sellerKey) {
 		Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
 		eav.put(":sellerKey", new AttributeValue().withS(sellerKey));
 		DynamoDBQueryExpression<SpApiTask> queryExpression = new DynamoDBQueryExpression<SpApiTask>()
@@ -55,6 +56,16 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 				.withExpressionAttributeValues(eav);
 		final DynamoDBMapper dbm = new DynamoDBMapper(DDB);
 		return dbm.query(SpApiTask.class, queryExpression);
+	}
+
+	@Override
+	public SpApiTask getTask(String sellerKey) {
+		val spApiTaskList = this.getTaskList(sellerKey);
+		if (spApiTaskList.isEmpty()) {
+			return null;
+		} else {
+			return spApiTaskList.stream().findFirst().get();
+		}
 	}
 
 	@Override
@@ -80,6 +91,18 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 	}
 
 	@Override
+	public void updateNextToken(String sellerKey, String sellerId, String nextToken){
+		DynamoDB dynamoDB = new DynamoDB(DDB);
+		final Table table = dynamoDB.getTable(TABLE_NAME);
+		PrimaryKey primaryKey = new PrimaryKey();
+		primaryKey.addComponent("sellerKey", sellerKey);
+		primaryKey.addComponent("sellerId", sellerId);
+		AttributeUpdate attributeUpdate = new AttributeUpdate("nextToken");
+		attributeUpdate.put(nextToken);
+		table.updateItem(primaryKey,attributeUpdate);
+	}
+
+	@Override
 	public void addTask(SpApiTask spApiTaskVO) {
 		final DynamoDBMapper dbm = new DynamoDBMapper(DDB);
 		dbm.batchSave(spApiTaskVO);
@@ -88,6 +111,8 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 	@Override
 	public void addNewTask(SpApiTask oldSpApiTask, String dateType, long space) {
 		SpApiTask apiTask = new SpApiTask();
+
+		// Old task and new task are sharing the same key and ID so it will update the old task on DDB.
 		apiTask.setSellerKey(oldSpApiTask.getSellerId() + "_" + oldSpApiTask.getTaskName());
 		apiTask.setSellerId(oldSpApiTask.getSellerId());
 		if(Objects.nonNull(oldSpApiTask.getEndTime())) {

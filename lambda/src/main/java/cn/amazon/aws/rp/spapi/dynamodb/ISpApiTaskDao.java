@@ -12,11 +12,14 @@ import java.util.List;
  * @author: zhangkui
  */
 public interface ISpApiTaskDao {
-	List<SpApiTask> getTask(String sellerKey);
+	List<SpApiTask> getTaskList(String sellerKey);
+	SpApiTask getTask(String sellerKey);
 
 	void delTask(String sellerKey, String sellerId);
 
 	void updateTaskStatus(String sellerKey, String sellerId, int status);
+
+	void updateNextToken(String sellerKey, String sellerId, String nextToken);
 
 	void addTask(SpApiTask spApiTaskVO);
 

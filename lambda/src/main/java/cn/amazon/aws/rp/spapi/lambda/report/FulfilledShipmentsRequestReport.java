@@ -16,7 +16,6 @@ import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
 import cn.amazon.aws.rp.spapi.enums.ReportTypeEnum;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
 import cn.amazon.aws.rp.spapi.utils.Helper;
-import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
 import cn.amazon.aws.rp.spapi.invoker.report.FulfilledShipmentsRequestReportApiInvoker;
 import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -69,7 +68,7 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 			try {
 				final String sellerKey = credentials.getSeller_id() + "_" + StatusEnum.INIT.getStatus() + "_" + TaskConstants.FULFILLED_SHIPMENT_REQUEST_REPORT;
 				//get task
-				List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerKey);
+				List<SpApiTask> spApiTaskList = spApiTaskDao.getTaskList(sellerKey);
 				if (spApiTaskList.isEmpty()) {
 					return;
 				}

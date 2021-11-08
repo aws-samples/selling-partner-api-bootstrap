@@ -24,7 +24,7 @@ public class ApiTaskIT {
 
     @Test
     public void getTask() {
-        List<SpApiTask> spApiTaskVOS = spApiTaskDaoDdb.getTask("A1HILDQKN3MNZ9_1_fulfilled_shipment_request_report");
+        List<SpApiTask> spApiTaskVOS = spApiTaskDaoDdb.getTaskList("A1HILDQKN3MNZ9_1_fulfilled_shipment_request_report");
         spApiTaskVOS.forEach(spApiTaskVO -> {
             System.out.println(spApiTaskVO.getSellerKey());
             System.out.println(spApiTaskVO.getStartTime());
@@ -38,7 +38,7 @@ public class ApiTaskIT {
 
     @Test
     public void addTask() {
-        String taskName = TaskConstants.LIST_FINANCIAL_EVENTS;
+        String taskName = TaskConstants.LIST_FINANCIAL_TASKS;
         String sellerId = "seller_tom";
         SpApiTask task = new SpApiTask();
         task.setSellerKey(sellerId + "_" + taskName);
@@ -53,7 +53,7 @@ public class ApiTaskIT {
 
     @Test
     public void upTask() {
-        String taskName = TaskConstants.LIST_FINANCIAL_EVENTS;
+        String taskName = TaskConstants.LIST_FINANCIAL_TASKS;
         String sellerId = "A1HILDQKN3MNZ9";
         spApiTaskDaoDdb.updateTaskStatus(sellerId + "_" + taskName, sellerId, StatusEnum.INIT.getStatus());
     }
