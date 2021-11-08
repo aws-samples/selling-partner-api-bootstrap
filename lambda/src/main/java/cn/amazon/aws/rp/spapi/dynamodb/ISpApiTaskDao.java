@@ -16,7 +16,7 @@ public interface ISpApiTaskDao {
 
 	void delTask(String sellerKey, String sellerId);
 
-	void upTaskStatus(String sellerKey, String sellerId,int status);
+	void updateTaskStatus(String sellerKey, String sellerId, int status);
 
 	void addTask(SpApiTask spApiTaskVO);
 

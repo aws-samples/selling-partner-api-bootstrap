@@ -2,7 +2,6 @@ package cn.amazon.aws.rp.spapi.lambda.finances;
 
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.FinancesApi;
-import cn.amazon.aws.rp.spapi.clients.api.SellersApi;
 import cn.amazon.aws.rp.spapi.clients.model.*;
 import cn.amazon.aws.rp.spapi.common.IdWorker;
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
@@ -16,7 +15,6 @@ import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
 import cn.amazon.aws.rp.spapi.enums.DateType;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
 import cn.amazon.aws.rp.spapi.invoker.finances.FinancesEventsApiInvoker;
-import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
 import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
 import cn.amazon.aws.rp.spapi.utils.DateUtil;
 import cn.amazon.aws.rp.spapi.utils.Helper;
@@ -31,9 +29,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> {
+public class ExecuteFinanceTaskForOneSeller implements RequestHandler<Object, Integer> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ExecuteTaskForOneSeller.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExecuteFinanceTaskForOneSeller.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final Map<String, FinancesApi> financesApiHolder;
     private static final IdWorker idWorker = new IdWorker();
@@ -41,7 +39,7 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
     private final IFinancesDao financesDao;
     private final ISpApiTaskDao spApiTaskDao;
 
-    public ExecuteTaskForOneSeller() {
+    public ExecuteFinanceTaskForOneSeller() {
         financesApiHolder = new HashMap<>();
         financesDao = new FinancesDao();
         spApiTaskDao = new SpApiTaskDao();
@@ -62,6 +60,7 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
             //get task
             final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
             List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerTaskKey);
+            // If there is no any task, then create the init task.
             if (spApiTaskList.isEmpty()) {
                 SpApiTask task = new SpApiTask();
                 task.setSellerKey(sellerTaskKey);
@@ -76,22 +75,23 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
             }
             SpApiTask apiTask = spApiTaskList.stream().findFirst().get();
             logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
-            //check time
+            // check time - Current task ending in the same hour of now -> return.
             long diff = DateUtil.betweenTwoTime(DateUtil.toUtc(DateUtil.getLocalDateTime(apiTask.getEndTime())), DateUtil.toUtc(LocalDateTime.now()), ChronoUnit.HOURS);
             if (diff < 1) {
                 return;
             }
+            // Skip if current task is in working status.
             if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
                 return;
             }
-
+            // Sync execution.
             sellerCredentials.getMarketplaces().forEach(marketplace -> {
                 requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
             });
 
             //update task
-            spApiTaskDao.upTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
-            //add task
+            spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
+            //add a new task for the next 2 days.
             spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
         } catch (Throwable throwable) {
             logger.error("Api call failed", throwable);

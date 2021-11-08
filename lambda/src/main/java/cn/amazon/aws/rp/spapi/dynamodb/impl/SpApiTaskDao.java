@@ -68,7 +68,7 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 	}
 
 	@Override
-	public void upTaskStatus(String sellerKey, String sellerId, int status) {
+	public void updateTaskStatus(String sellerKey, String sellerId, int status) {
 		DynamoDB dynamoDB = new DynamoDB(DDB);
 		final Table table = dynamoDB.getTable(TABLE_NAME);
 		PrimaryKey primaryKey = new PrimaryKey();
@@ -86,13 +86,14 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 	}
 
 	@Override
-	public void addNewTask(SpApiTask spApiTask, String dateType, long space) {
+	public void addNewTask(SpApiTask oldSpApiTask, String dateType, long space) {
 		SpApiTask apiTask = new SpApiTask();
-		apiTask.setSellerKey(spApiTask.getSellerId() + "_" + spApiTask.getTaskName());
-		apiTask.setSellerId(spApiTask.getSellerId());
-		if(Objects.nonNull(spApiTask.getEndTime())) {
-			apiTask.setStartTime(spApiTask.getEndTime());
-			LocalDateTime localDateTime = DateUtil.getLocalDateTime(spApiTask.getEndTime());
+		apiTask.setSellerKey(oldSpApiTask.getSellerId() + "_" + oldSpApiTask.getTaskName());
+		apiTask.setSellerId(oldSpApiTask.getSellerId());
+		if(Objects.nonNull(oldSpApiTask.getEndTime())) {
+			// The new task starts from the end of old task.
+			apiTask.setStartTime(oldSpApiTask.getEndTime());
+			LocalDateTime localDateTime = DateUtil.getLocalDateTime(oldSpApiTask.getEndTime());
 			if (DateType.NANOS.name().equalsIgnoreCase(dateType)) {
 				apiTask.setEndTime(DateUtil.getDateFormat(localDateTime.plusNanos(space)));
 			} else if (DateType.SECONDS.name().equalsIgnoreCase(dateType)) {
@@ -116,7 +117,7 @@ public class SpApiTaskDao implements ISpApiTaskDao {
 			}
 		}
 		apiTask.setTaskId(idWorker.nextId());
-		apiTask.setTaskName(spApiTask.getTaskName());
+		apiTask.setTaskName(oldSpApiTask.getTaskName());
 		apiTask.setExecuteStatus(StatusEnum.INIT.getStatus());
 		this.addTask(apiTask);
 	}

@@ -45,7 +45,7 @@ public class RateLimiterRedis {
         RRateLimiter limiter = redisson.getRateLimiter(limiterName);
         logger.info(">> Acquiring permit");
         limiter.acquire();
-        logger.info("<< Acquired permit" + limiter.getConfig().getRateInterval());
+        logger.info("<< Acquired permit at interval - " + limiter.getConfig().getRateInterval());
     }
 
     public static void updateRateLimiter(String limiterName, Integer rate, Integer interval) {

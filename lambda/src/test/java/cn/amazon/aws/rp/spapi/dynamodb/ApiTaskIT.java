@@ -55,6 +55,6 @@ public class ApiTaskIT {
     public void upTask() {
         String taskName = TaskConstants.LIST_FINANCIAL_EVENTS;
         String sellerId = "A1HILDQKN3MNZ9";
-        spApiTaskDaoDdb.upTaskStatus(sellerId + "_" + taskName, sellerId, StatusEnum.INIT.getStatus());
+        spApiTaskDaoDdb.updateTaskStatus(sellerId + "_" + taskName, sellerId, StatusEnum.INIT.getStatus());
     }
 }
