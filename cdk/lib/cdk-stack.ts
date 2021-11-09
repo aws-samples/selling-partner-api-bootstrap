@@ -49,9 +49,21 @@ export class SpApi extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST
     });
 
+    const apiTaskTableName = 'sp_api_task';
+
+    const apiTaskTable = new Table(this, 'sp_api_task', {
+        tableName: apiTaskTableName,
+        partitionKey: { name: 'sellerKey', type: AttributeType.STRING },
+        sortKey: { name: "sellerId", type: AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        // For dev/test purpose
+        billingMode: BillingMode.PAY_PER_REQUEST
+    });
+
     const parameter = {
       codeZip, lambdaSG, vpc, redisCluster, secrtesTableName,
-       eventBus, seller_central_app_credentials, spapiRole, ssm_seller_central_app_credentials, secretsTalbe
+       eventBus, seller_central_app_credentials, spapiRole, 
+       ssm_seller_central_app_credentials, secretsTalbe, apiTaskTable
     };
 
     const orderStack = new OrderStack(this, parameter);

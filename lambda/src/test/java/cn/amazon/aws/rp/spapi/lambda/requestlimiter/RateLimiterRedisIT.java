@@ -17,7 +17,7 @@ public class RateLimiterRedisIT {
     @Test
     public void acquirePermits() {
         RateLimiterRedis.updateRateLimiter("Test9", 1, 1);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             RateLimiterRedis.acquirePermit("Test9", 1, 1);
         }
     }
@@ -28,5 +28,14 @@ public class RateLimiterRedisIT {
         for (int i = 0; i < 2; i++) {
             RateLimiterRedis.acquirePermit("Test9", 1, 1);
         }
+    }
+
+    @Test
+    public void updateRateLiter() {
+        RateLimiterRedis.updateRateLimiter("Test9", 1, 5);
+        RateLimiterRedis.updateRateLimiter("Test9", 1, 9);
+        RateLimiterRedis.updateRateLimiter("Test9", 1, 5);
+        RateLimiterRedis.updateRateLimiter("Test9", 1, 5);
+        RateLimiterRedis.updateRateLimiter("Test9", 1, 9);
     }
 }

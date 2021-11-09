@@ -29,11 +29,12 @@ export class OrderStack extends cdk.Construct{
         const eventBusPullOrderTimer = new events.Rule(this, "pullOrderTimer", {
             description: "create a timer to trigger lambda function",
             enabled: true,
-            schedule: events.Schedule.rate(cdk.Duration.minutes(1))
+            schedule: events.Schedule.rate(cdk.Duration.minutes(2))
         });
 
         //For order getData
         this.getOrderListForOneSellerFunc = new lambda.Function(this, "GetOrderListForOneSeller", {
+            functionName: "GetOrderListForOneSeller",
             runtime: lambda.Runtime.JAVA_8,
             code: lambda.Code.fromAsset(parameter.codeZip),
             handler: 'cn.amazon.aws.rp.spapi.lambda.order.GetOrderListForOneSeller',
@@ -45,6 +46,7 @@ export class OrderStack extends cdk.Construct{
                 DYNAMODB_ORDERS_TABLE: ordersTableName,
                 EVENT_BUS_NAME: parameter.eventBus.eventBusName,
                 SELLER_CENTRAL_APP_CREDENTIALS: parameter.seller_central_app_credentials,
+                getOrderListForOneSellerFuncName: "GetOrderListForOneSeller",
                 Role: parameter.spapiRole
             },
             timeout: cdk.Duration.seconds(900),
@@ -52,6 +54,9 @@ export class OrderStack extends cdk.Construct{
             tracing: lambda.Tracing.ACTIVE,
             retryAttempts: 0 // Retry should be controled by request limiter.
         });
+
+        // FIXME - Create a policy to allow this function to invoke Lambda. 
+        // this.getOrderListForOneSellerFunc.grantInvoke(this.getOrderListForOneSellerFunc);
         ordersTalbe.grantReadWriteData(this.getOrderListForOneSellerFunc);
         events.EventBus.grantPutEvents(this.getOrderListForOneSellerFunc);
         this.getOrderListForOneSellerFunc.addToRolePolicy(new iam.PolicyStatement({
@@ -59,7 +64,7 @@ export class OrderStack extends cdk.Construct{
             actions: ['sts:AssumeRole'],
         }));
         parameter.ssm_seller_central_app_credentials.grantRead(this.getOrderListForOneSellerFunc);
-
+        parameter.apiTaskTable.grantReadWriteData(this.getOrderListForOneSellerFunc);
 
         //For order executeTask
         const getAllSellerCredentialsAndPullFunc = new lambda.Function(this, "GetAllSellerCredentialsAndPullOrders", {

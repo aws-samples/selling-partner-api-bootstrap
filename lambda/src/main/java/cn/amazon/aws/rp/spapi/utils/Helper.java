@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -63,29 +64,44 @@ public class Helper {
         }
     }
 
-//    private static Calendar calendar = Calendar.getInstance();
-//
-//    /**
-//     * @param aheadSec if giving 0 then return current time string in iso format. If giving 1 then return the
-//     *                 time 1 second before current.
-//     * @return
-//     */
-//    public static String getIso8601Time(int aheadSec) {
-//        TimeZone tz = TimeZone.getTimeZone("UTC");
-//        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
-//        df.setTimeZone(tz);
-//        final Date current = new Date();
-//        calendar.setTime(current);
-//        calendar.add(Calendar.SECOND, -aheadSec);
-//
-//        return df.format(calendar.getTime());
-//    }
-//
+    private static Calendar calendar = Calendar.getInstance();
+
+    /**
+     * @param aheadSec if giving 0 then return current time string in iso format. If giving 1 then return the
+     *                 time 1 second before current.
+     * @return
+     */
+    public static String getIso8601Time(int aheadSec) {
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+        df.setTimeZone(tz);
+        final Date current = new Date();
+        calendar.setTime(current);
+        calendar.add(Calendar.SECOND, -aheadSec);
+
+        return df.format(calendar.getTime());
+    }
+
+    /**
+     * @param time in format like 2020-08-01 00:00:00
+     */
+    public static String getIso8601Time(String time) {
+        logger.info("going to format {}", time);
+        DateFormat sourceDf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        try {
+            Date result = sourceDf.parse(time);
+
+            TimeZone tz = TimeZone.getTimeZone("UTC");
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+            df.setTimeZone(tz);
+            return df.format(result);
+        } catch (ParseException e) {
+            logger.error("cannot parse date, is it in format like: 2020-08-01 00:00:00");
+        }
+        return "";
+    }
+
 //    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//
-
-
-
 
 
 //    /**
@@ -103,8 +119,6 @@ public class Helper {
 //        final ISpApiSecretDao ssDao = new SpApiSecretDao();
 //        return ssDao.getSecretsVOForSeller(sellerId);
 //    }
-
-
 
 
 }

@@ -81,7 +81,7 @@ public class ApiProxy<R> {
                 }
             }
         } catch (ApiException throwable) {
-            logger.error("Other error found in API Call ", throwable);
+            logger.error("Other error found in API Call {} - {}", throwable, throwable.getMessage());
             logger.error("Details: " + gson.toJson(throwable));
             throw throwable;
         }

@@ -24,7 +24,7 @@ public class ApiTaskIT {
 
     @Test
     public void getTask() {
-        List<SpApiTask> spApiTaskVOS = spApiTaskDaoDdb.getTaskList("A1HILDQKN3MNZ9_1_fulfilled_shipment_request_report");
+        List<SpApiTask> spApiTaskVOS = spApiTaskDaoDdb.getTaskList("seller_unit_test");
         spApiTaskVOS.forEach(spApiTaskVO -> {
             System.out.println(spApiTaskVO.getSellerKey());
             System.out.println(spApiTaskVO.getStartTime());

@@ -15,7 +15,8 @@ export interface CommonParameter {
     readonly seller_central_app_credentials: string;
     readonly spapiRole: string;
     readonly ssm_seller_central_app_credentials: ssm.IStringParameter
-    readonly secretsTalbe: Table
+    readonly secretsTalbe: Table;
+    readonly apiTaskTable: Table
 }
 
 

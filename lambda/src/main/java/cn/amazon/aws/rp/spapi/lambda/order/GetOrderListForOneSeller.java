@@ -58,7 +58,7 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
 
     @Override
     public Integer handleRequest(Object input, Context context) {
-
+        logger.info("enter");
         String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
 
         SellerCredentials sellerCredentials = gson.fromJson(jsonSellerSecrets, SellerCredentials.class);
@@ -73,13 +73,17 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
         return SpApiConstants.CODE_200;
     }
 
+    private String sellerTaskKey = "";
+
     public void executeTask(SellerCredentials sellerCredentials) {
         try {
             //get task
-            final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_ORDER_TASKS;
+            sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_ORDER_TASKS;
             List<SpApiTask> spApiTaskList = spApiTaskDao.getTaskList(sellerTaskKey);
+            logger.info("Current task is: {}", gson.toJson(spApiTaskList));
             // If there is no any task, then create the init task.
             if (spApiTaskList.isEmpty()) {
+                logger.info("[Not task and create new.]");
                 SpApiTask task = new SpApiTask();
                 task.setSellerKey(sellerTaskKey);
                 task.setSellerId(sellerCredentials.getSeller_id());
@@ -89,48 +93,60 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
                 task.setExecuteStatus(StatusEnum.INIT.getStatus());
                 spApiTaskDao.addTask(task);
                 spApiTaskList.add(task);
+                logger.info("sellerId:{} queryTime:{}-{}", task.getSellerId(), task.getStartTime(), task.getEndTime());
+                // Sync execution.
+                //update task status
+                logger.info("[ set status to WORKING.]");
+                spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
+                // execute the task
+                requestOrders(getMktPlaceIdList(sellerCredentials),
+                        sellerCredentials,
+                        task
+                        );
+            // Has one task.
+            } else if (spApiTaskList.get(0).getNextToken() != null
+                        & ! spApiTaskList.get(0).getNextToken().isEmpty()
+//                        & !(spApiTaskList.get(0).getExecuteStatus().equals(StatusEnum.WORKING.getStatus())))
+                        )
+            {
 
-            } else if (spApiTaskList.stream().findFirst().get().getNextToken() != null
-                    & !spApiTaskList.stream().findFirst().get().getNextToken().isEmpty()
-                    & !(spApiTaskList.stream().findFirst().get().getExecuteStatus().equals(StatusEnum.WORKING.getStatus()))) {
+                logger.info("[ Has token and going to retrieve it.]");
                 // Has next token in task then we only handle the next token.
                 // Sync execution.
                 //update task status
-                val existingTask = spApiTaskList.stream().findFirst().get();
+                val existingTask = spApiTaskList.get(0);
+                logger.info("[ set status to WORKING.]");
                 spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
                 final List<String> mktIdList = getMktPlaceIdList(sellerCredentials);
                 final HashMap<String, Object> input = new HashMap<>();
                 input.put("marketplaceIds", mktIdList);
                 pullOrdersByNextToken(input, sellerCredentials, existingTask.getNextToken());
-                return;
-            } else {
-                logger.error("should not go here!");
-                throw new RuntimeException("SPAPI Task is in wrong state.");
+            } else{
+                logger.info("[SKIP: Has token and working.... ]");
+//                if (spApiTaskList.get(0).getExecuteStatus().equals(StatusEnum.COMPLETE.getStatus())) {
+//                    logger.info("<<< RETURN BECAUSE THE TASK IS COMPLETED. <<<");
+//                }
+//                SpApiTask apiTask = spApiTaskList.get(0);
+//                logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
+//                // Skip if current task is in working status.
+//                if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
+//                    logger.warn("skip a task in working status!");
+//                    return;
+//                }
+//                // Sync execution.
+//                //update task status
+//                logger.info("[ set status to WORKING.]");
+//                spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
+//                // execute the task
+//                requestOrders(getMktPlaceIdList(sellerCredentials),
+//                        sellerCredentials,
+//                        apiTask);
             }
-            SpApiTask apiTask = spApiTaskList.stream().findFirst().get();
-            logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
-            // check time - Current task ending in the same hour of now -> return.
-            long diff = DateUtil.betweenTwoTime(DateUtil.toUtc(DateUtil.getLocalDateTime(apiTask.getEndTime())), DateUtil.toUtc(LocalDateTime.now()), ChronoUnit.HOURS);
-            if (diff < 1) {
-                return;
-            }
-            // Skip if current task is in working status.
-            if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
-                return;
-            }
-            // Sync execution.
-            //update task status
-            spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
-            // execute the task
-            requestOrders(getMktPlaceIdList(sellerCredentials),
-                    sellerCredentials,
-                    apiTask);
-//            requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
-
-            //add a new task for the next 2 days.
-            spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
         } catch (Throwable throwable) {
             logger.error("Api call failed", throwable);
+            // Revert the status back, so it can be restarted.
+            logger.info("[ set status to INIT.]");
+            spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.INIT.getStatus());
         }
     }
 
@@ -175,7 +191,7 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
             // Prepare parameters
             final HashMap<String, Object> input = new HashMap<>();
             input.put("marketplaceIds", marketplaceId);
-            final String from = apiTask.getStartTime();
+            String from = Helper.getIso8601Time(apiTask.getStartTime());
             input.put("createdAfter", from);
 
             /*
@@ -205,13 +221,20 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
     }
 
     private void asyncGetNextToken(SellerCredentials sellerCredentials, SpApiTask apiTask, String nextToken) {
-        logger.info("pulling more orders according to next token.");
+        logger.info("Going to start a new lambda for next token. Update token now {}-{}-{}"
+                , apiTask.getSellerKey()
+                , apiTask.getSellerId()
+                , nextToken);
         spApiTaskDao.updateNextToken(apiTask.getSellerKey(), apiTask.getSellerId(), nextToken);
-        final String funcName = Utils.getEnv("getOrderListForOneSellerFuncName");
+        // Change status from WORKING to INIT so next lambda can process the next token.
+        logger.info("[ set status to INIT.]");
+        spApiTaskDao.updateTaskStatus(apiTask.getSellerKey(), apiTask.getSellerId(), StatusEnum.INIT.getStatus());
+        final String funcName = Utils.getEnv("getOrderListForOneSellerFuncName"); // Hard-coded on CDK.
         Helper.invokeLambda(funcName, gson.toJson(sellerCredentials), true);
     }
 
-    private ApiResponse<GetOrdersResponse> apiProxyInvokeForOrders(SellerCredentials secretsVO, OrdersApi ordersApi, HashMap<String, Object> input) throws Throwable {
+    private ApiResponse<GetOrdersResponse> apiProxyInvokeForOrders(SellerCredentials secretsVO, OrdersApi ordersApi,
+                                                                   HashMap<String, Object> input) throws Throwable {
 
         // Invoke with API proxy
         final OrderGetNewCreatedByTimeSpan getOrder = new OrderGetNewCreatedByTimeSpan(ordersApi);
@@ -226,10 +249,10 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
      * All resulting orders will be put to one object.
      */
     private void pullOrdersByNextToken(HashMap<String, Object> input,
-                                            SellerCredentials secretsVO,
-                                            String nextToken)
+                                       SellerCredentials secretsVO,
+                                       String nextToken)
             throws Throwable {
-        logger.info("Pulling next token- {}", nextToken);
+        logger.info("Pulling orders for next token- {}", nextToken);
         final OrdersApi ordersApi = getOrCreateOrdersApi(secretsVO);
         try {
 
@@ -238,15 +261,22 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
             final ApiResponse<GetOrdersResponse> ordersWithHttpInfo = apiProxyInvokeForOrders(secretsVO, ordersApi, input);
             final OrderList orders = ordersWithHttpInfo.getData().getPayload().getOrders();
             if (orders != null) {
+                logger.info("Number to save: {}", orders.size());
                 ordersDao.put(orders, secretsVO.getSeller_id());
             }
             final String newToken = ordersWithHttpInfo.getData().getPayload().getNextToken();
-            if (newToken != null) { // Recurrent call.
+            if (newToken != null) { // Lambda call.
                 logger.info("Still has token: " + newToken);
                 asyncGetNextToken(
-                         secretsVO
-                        ,spApiTaskDao.getTask( secretsVO.getSeller_id() + "_" + TaskConstants.LIST_ORDER_TASKS)
-                        ,nextToken);
+                        secretsVO
+                        , spApiTaskDao.getTask(secretsVO.getSeller_id() + "_" + TaskConstants.LIST_ORDER_TASKS)
+                        , newToken);
+            } else {
+                // Completed execution.
+                spApiTaskDao.updateNextToken(sellerTaskKey, secretsVO.getSeller_id(), "");
+                logger.info("[ set status to COMPLETE.]");
+                spApiTaskDao.updateTaskStatus(sellerTaskKey, secretsVO.getSeller_id(),
+                        StatusEnum.COMPLETE.getStatus());
             }
         } catch (Throwable e) {
             logger.error("Cannot pull order using token. " + nextToken, e);

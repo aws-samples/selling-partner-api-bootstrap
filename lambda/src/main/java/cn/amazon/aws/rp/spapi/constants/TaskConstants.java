@@ -11,6 +11,6 @@ package cn.amazon.aws.rp.spapi.constants;
 public class TaskConstants {
 	public static final String FULFILLED_SHIPMENT_REQUEST_REPORT = "fulfilled_shipment_request_report";
 	public static final String LIST_FINANCIAL_TASKS = "list_financial_tasks";
-	public static final String LIST_ORDER_TASKS = "list_financial_tasks";
+	public static final String LIST_ORDER_TASKS = "list_order_tasks";
 
 }

@@ -12,16 +12,7 @@ export class FinancesStack extends cdk.Construct {
     constructor(scope: cdk.Construct, parameter: CommonParameter, props?: cdk.StackProps) {
         super(scope, "FinancesStack");
 
-        const apiTaskTableName = 'sp_api_task';
 
-        const apiTaskTable = new Table(this, 'sp_api_task', {
-            tableName: apiTaskTableName,
-            partitionKey: { name: 'sellerKey', type: AttributeType.STRING },
-            sortKey: { name: "sellerId", type: AttributeType.STRING },
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
-            // For dev/test purpose
-            billingMode: BillingMode.PAY_PER_REQUEST
-        });
 
         const eventBusPullFinancesTimer = new events.Rule(this, "pullFinancesTimer", {
             description: "create a timer to trigger lambda function",
@@ -44,7 +35,7 @@ export class FinancesStack extends cdk.Construct {
         const financeExecuteTaskForOneSeller = new lambda.Function(this, "FinancesExecuteTaskForOneSeller", {
             runtime: lambda.Runtime.JAVA_8,
             code: lambda.Code.fromAsset(parameter.codeZip),
-            handler: 'cn.amazon.aws.rp.spapi.lambda.finances.ExecuteTaskForOneSeller',
+            handler: 'cn.amazon.aws.rp.spapi.lambda.finances.ExecuteFinanceTaskForOneSeller',
             securityGroups: [parameter.lambdaSG],
             vpc: parameter.vpc,
             environment: {
@@ -62,7 +53,7 @@ export class FinancesStack extends cdk.Construct {
         });
         //set permissions
         financialshipmentEventTable.grantReadWriteData(financeExecuteTaskForOneSeller);
-        apiTaskTable.grantReadWriteData(financeExecuteTaskForOneSeller);
+        parameter.apiTaskTable.grantReadWriteData(financeExecuteTaskForOneSeller);
         //bus event
         events.EventBus.grantPutEvents(financeExecuteTaskForOneSeller);
         financeExecuteTaskForOneSeller.addToRolePolicy(new iam.PolicyStatement({

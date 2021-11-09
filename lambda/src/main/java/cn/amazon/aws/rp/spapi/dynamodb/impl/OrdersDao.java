@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class OrdersDao implements IOrdersDao {
 
-    private static final Logger logger = LoggerFactory.getLogger(SpApiSecretDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrdersDao.class);
     private static final AmazonDynamoDB DDB = AmazonDynamoDBClientBuilder.standard().build();
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -44,7 +44,7 @@ public class OrdersDao implements IOrdersDao {
     @Override
     public void put(OrderList orders, String sellerId) {
 
-        orders.forEach(
+        orders.parallelStream().forEach(
                 order -> putOne(order, sellerId)
         );
     }
@@ -56,7 +56,7 @@ public class OrdersDao implements IOrdersDao {
                     .withString("MarketPlaceId","NA")
                     .withString("LastUpdate",order.getLastUpdateDate())
                     .withJSON("orderDetails", gson.toJson(order)));
-            logger.info("PutItem succeeded: ");
+            logger.info("[order] PutItem succeeded.");
         } catch (Exception e) {
             logger.error("Cannot save order to dynamodb! ", e);
         }
