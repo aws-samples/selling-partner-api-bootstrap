@@ -6,17 +6,12 @@ import cn.amazon.aws.rp.spapi.clients.model.GetMarketplaceParticipationsResponse
 import cn.amazon.aws.rp.spapi.clients.model.Marketplace;
 import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipation;
 import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipationList;
-import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
 import cn.amazon.aws.rp.spapi.utils.Helper;
 import cn.amazon.aws.rp.spapi.utils.Utils;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +24,7 @@ import static cn.amazon.aws.rp.spapi.utils.Helper.logInput;
  * The event bus will trigger this lambda at intervals.
  * This function will then go and retrieve all seller credentials from db and start the StepFunction to query for new orders.
  */
-public class GetAllSellerCredentialsAndPullOrders implements RequestHandler<ScheduledEvent, String> {
+public class GetAllSellerCredentialsAndPullOrders {
 
     private static final Logger logger = LoggerFactory.getLogger(GetAllSellerCredentialsAndPullOrders.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -39,13 +34,11 @@ public class GetAllSellerCredentialsAndPullOrders implements RequestHandler<Sche
      * Ref - https://docs.amazonaws.cn/en_us/lambda/latest/dg/java-handler.html
      *
      * @param input
-     * @param context
      * @return
      */
-    @Override
-    public String handleRequest(ScheduledEvent input, Context context) {
+    public String handleRequest(String input) {
         logger.info("start");
-        logInput(logger, input, context, gson);
+        logInput(logger, input, gson);
         final List<SellerCredentials> secretsVOForAllSeller = SpApiSecretDao.getSellerCredentials();
         ;
 

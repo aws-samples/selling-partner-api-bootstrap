@@ -2,20 +2,17 @@ package cn.amazon.aws.rp.spapi.lambda.order;
 
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.OrdersApi;
-import cn.amazon.aws.rp.spapi.clients.api.SellersApi;
-import cn.amazon.aws.rp.spapi.clients.model.*;
+import cn.amazon.aws.rp.spapi.clients.model.GetOrdersResponse;
+import cn.amazon.aws.rp.spapi.clients.model.Marketplace;
+import cn.amazon.aws.rp.spapi.clients.model.OrderList;
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
 import cn.amazon.aws.rp.spapi.dynamodb.IOrdersDao;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.OrdersDao;
 import cn.amazon.aws.rp.spapi.eventbridge.OrderReceivedEventGenerator;
 import cn.amazon.aws.rp.spapi.invoker.order.OrderGetNewCreatedByTimeSpan;
-import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
 import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
 import cn.amazon.aws.rp.spapi.lambda.vo.OrdersWithSeller;
-import cn.amazon.aws.rp.spapi.utils.Helper;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
@@ -31,7 +28,7 @@ import java.util.stream.Collectors;
  * EventBridge Timer -> GetAllSellerCredentialsAndPull -> here
  * The retried orders will be sent to event bus.
  */
-public class GetOrderListForOneSeller implements RequestHandler<Object, Integer> {
+public class GetOrderListForOneSeller {
 
     private static final Logger logger = LoggerFactory.getLogger(GetOrderListForOneSeller.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -46,8 +43,7 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
         ordersDao = new OrdersDao();
     }
 
-    @Override
-    public Integer handleRequest(Object input, Context context) {
+    public Integer handleRequest(Object input) {
 
         String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
 

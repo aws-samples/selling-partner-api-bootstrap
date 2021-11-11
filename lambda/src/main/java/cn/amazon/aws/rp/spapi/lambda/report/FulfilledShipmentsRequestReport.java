@@ -3,25 +3,24 @@ package cn.amazon.aws.rp.spapi.lambda.report;
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.ReportsApi;
 import cn.amazon.aws.rp.spapi.clients.api.SellersApi;
-import cn.amazon.aws.rp.spapi.clients.model.*;
+import cn.amazon.aws.rp.spapi.clients.model.CreateReportResponse;
+import cn.amazon.aws.rp.spapi.clients.model.GetMarketplaceParticipationsResponse;
+import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipation;
+import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipationList;
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
 import cn.amazon.aws.rp.spapi.constants.TaskConstants;
 import cn.amazon.aws.rp.spapi.dynamodb.IReportsDao;
 import cn.amazon.aws.rp.spapi.dynamodb.ISpApiTaskDao;
+import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SpApiTask;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.ReportsDao;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
 import cn.amazon.aws.rp.spapi.enums.ReportTypeEnum;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
-import cn.amazon.aws.rp.spapi.utils.Helper;
-import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
 import cn.amazon.aws.rp.spapi.invoker.report.FulfilledShipmentsRequestReportApiInvoker;
 import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
+import cn.amazon.aws.rp.spapi.utils.Helper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
@@ -38,7 +37,7 @@ import java.util.Map;
  * @date: 2020/11/10 20:10
  * @author: zhangkui
  */
-public class FulfilledShipmentsRequestReport implements RequestHandler<ScheduledEvent, String> {
+public class FulfilledShipmentsRequestReport {
 
 	private static final Logger logger = LoggerFactory.getLogger(FulfilledShipmentsRequestReport.class);
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -54,11 +53,10 @@ public class FulfilledShipmentsRequestReport implements RequestHandler<Scheduled
 		spApiTaskDao = new SpApiTaskDao();
 	}
 
-	@Override
-	public String handleRequest(ScheduledEvent input, Context context) {
+public String handleRequest(Object input) {
 		String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
 //		SellerSecretsVO sellerSecretsVO = gson.fromJson(jsonSellerSecrets, SellerSecretsVO.class);
-		Helper.logInput(logger, jsonSellerSecrets, context, gson);
+		Helper.logInput(logger, jsonSellerSecrets, gson);
 		//get seller
 		List<SellerCredentials> sellerCredentials = SpApiSecretDao.getSellerCredentials();
 		if (sellerCredentials.isEmpty()) {

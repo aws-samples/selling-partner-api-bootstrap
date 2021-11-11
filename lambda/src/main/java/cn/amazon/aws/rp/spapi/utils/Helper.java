@@ -1,9 +1,5 @@
 package cn.amazon.aws.rp.spapi.utils;
 
-import cn.amazon.aws.rp.spapi.clients.api.*;
-import cn.amazon.aws.rp.spapi.dynamodb.ISpApiSecretDao;
-import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
-import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
@@ -11,25 +7,15 @@ import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.model.ServiceException;
-import com.amazonaws.services.lambda.runtime.Context;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
 
 public class Helper {
     static private final Logger logger = LoggerFactory.getLogger(Helper.class);
 
-    public static void logInput(Logger logger, Object event, Context context, Gson gson) {
+    public static void logInput(Logger logger, Object event, Gson gson) {
         logger.info("Env: " + gson.toJson(System.getenv()));
-        logger.info("Ctx: " + gson.toJson(context));
         logger.info("Evt: " + gson.toJson(event));
     }
 

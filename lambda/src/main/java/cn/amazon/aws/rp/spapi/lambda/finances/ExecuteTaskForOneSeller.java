@@ -2,8 +2,9 @@ package cn.amazon.aws.rp.spapi.lambda.finances;
 
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.FinancesApi;
-import cn.amazon.aws.rp.spapi.clients.api.SellersApi;
-import cn.amazon.aws.rp.spapi.clients.model.*;
+import cn.amazon.aws.rp.spapi.clients.model.FinancialEvents;
+import cn.amazon.aws.rp.spapi.clients.model.ListFinancialEventsResponse;
+import cn.amazon.aws.rp.spapi.clients.model.Marketplace;
 import cn.amazon.aws.rp.spapi.common.IdWorker;
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
 import cn.amazon.aws.rp.spapi.constants.TaskConstants;
@@ -16,12 +17,9 @@ import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
 import cn.amazon.aws.rp.spapi.enums.DateType;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
 import cn.amazon.aws.rp.spapi.invoker.finances.FinancesEventsApiInvoker;
-import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
 import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
 import cn.amazon.aws.rp.spapi.utils.DateUtil;
 import cn.amazon.aws.rp.spapi.utils.Helper;
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
@@ -31,7 +29,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> {
+public class ExecuteTaskForOneSeller {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecuteTaskForOneSeller.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -47,10 +45,9 @@ public class ExecuteTaskForOneSeller implements RequestHandler<Object, Integer> 
         spApiTaskDao = new SpApiTaskDao();
     }
 
-    @Override
-    public Integer handleRequest(Object input, Context context) {
+    public Integer handleRequest(Object input) {
 	    String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
-	    Helper.logInput(logger, jsonSellerSecrets, context, gson);
+	    Helper.logInput(logger, jsonSellerSecrets, gson);
 	    SellerCredentials sellerCredentials = gson.fromJson(jsonSellerSecrets, SellerCredentials.class);
 	    executeTask(sellerCredentials);
 	    return SpApiConstants.CODE_200;
