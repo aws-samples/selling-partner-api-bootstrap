@@ -53,10 +53,10 @@ public class RateLimiterRedis {
 
         RRateLimiter limiter = redisson.getRateLimiter(limiterName);
         final RateLimiterConfig rrConfig = limiter.getConfig();
-        logger.info("existing {}, to be {}", rrConfig.getRateInterval(), (interval - 50L)*1000L);
-        if(((long) interval - 50L) * 1000L != rrConfig.getRateInterval()){
+        logger.info("existing {}, to be {}", rrConfig.getRateInterval(), (interval - 40L)*1000L);
+        if(((long) interval - 40L) * 1000L != rrConfig.getRateInterval()){
             logger.info(String.format("Update rate [%s], interval [%s] ", rate, interval));
-            limiter.setRate(RateType.OVERALL, (long) rate, (long) interval - 50L, RateIntervalUnit.SECONDS);
+            limiter.setRate(RateType.OVERALL, (long) rate, (long) interval - 40L, RateIntervalUnit.SECONDS);
         }else{
             logger.info("SKIP - Interval doesn't change, so don't update it.");
         }

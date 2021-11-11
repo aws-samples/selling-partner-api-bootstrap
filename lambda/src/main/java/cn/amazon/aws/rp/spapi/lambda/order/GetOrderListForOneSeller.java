@@ -87,12 +87,11 @@ public class GetOrderListForOneSeller implements RequestHandler<Object, Integer>
                 SpApiTask task = new SpApiTask();
                 task.setSellerKey(sellerTaskKey);
                 task.setSellerId(sellerCredentials.getSeller_id());
-                task.setStartTime("2020-08-01 00:00:00");
+                task.setStartTime("2020-InitCredentialsTableHelper08-01 00:00:00");
                 task.setTaskId(idWorker.nextId());
                 task.setTaskName(TaskConstants.LIST_ORDER_TASKS);
                 task.setExecuteStatus(StatusEnum.INIT.getStatus());
                 spApiTaskDao.addTask(task);
-                spApiTaskList.add(task);
                 logger.info("sellerId:{} queryTime:{}-{}", task.getSellerId(), task.getStartTime(), task.getEndTime());
                 // Sync execution.
                 //update task status
