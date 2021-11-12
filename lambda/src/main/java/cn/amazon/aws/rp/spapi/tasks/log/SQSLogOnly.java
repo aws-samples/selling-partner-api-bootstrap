@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.log;
+package cn.amazon.aws.rp.spapi.tasks.log;
 
 public class SQSLogOnly {
 

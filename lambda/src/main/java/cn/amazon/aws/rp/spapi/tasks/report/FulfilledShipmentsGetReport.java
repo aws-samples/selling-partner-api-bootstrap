@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.report;
+package cn.amazon.aws.rp.spapi.tasks.report;
 
 /**
  * @description:

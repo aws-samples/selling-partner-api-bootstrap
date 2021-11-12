@@ -17,7 +17,7 @@ import cn.amazon.aws.rp.spapi.clients.*;
 import cn.amazon.aws.rp.spapi.clients.model.GetMarketplaceParticipationsResponse;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
-import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
+import cn.amazon.aws.rp.spapi.tasks.requestlimiter.ApiProxy;
 import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

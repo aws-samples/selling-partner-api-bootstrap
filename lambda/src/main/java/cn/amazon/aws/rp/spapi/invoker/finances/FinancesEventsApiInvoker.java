@@ -2,7 +2,7 @@ package cn.amazon.aws.rp.spapi.invoker.finances;
 
 import cn.amazon.aws.rp.spapi.constants.DateConstants;
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
-import cn.amazon.aws.rp.spapi.lambda.requestlimiter.Invokable;
+import cn.amazon.aws.rp.spapi.tasks.requestlimiter.Invokable;
 import cn.amazon.aws.rp.spapi.clients.ApiException;
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.FinancesApi;

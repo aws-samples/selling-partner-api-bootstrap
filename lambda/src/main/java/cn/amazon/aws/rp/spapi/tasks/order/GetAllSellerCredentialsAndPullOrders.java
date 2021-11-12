@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.order;
+package cn.amazon.aws.rp.spapi.tasks.order;
 
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.SellersApi;

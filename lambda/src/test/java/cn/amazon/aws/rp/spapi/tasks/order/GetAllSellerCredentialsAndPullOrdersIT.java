@@ -1,8 +1,6 @@
-package cn.amazon.aws.rp.spapi.lambda.order;
+package cn.amazon.aws.rp.spapi.tasks.order;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class GetAllSellerCredentialsAndPullOrdersIT {
 

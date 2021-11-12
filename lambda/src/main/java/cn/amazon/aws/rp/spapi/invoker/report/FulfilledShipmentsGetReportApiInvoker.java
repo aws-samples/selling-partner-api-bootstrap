@@ -4,7 +4,7 @@ import cn.amazon.aws.rp.spapi.clients.ApiException;
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.ReportsApi;
 import cn.amazon.aws.rp.spapi.clients.model.GetReportResponse;
-import cn.amazon.aws.rp.spapi.lambda.requestlimiter.Invokable;
+import cn.amazon.aws.rp.spapi.tasks.requestlimiter.Invokable;
 
 import java.util.Map;
 

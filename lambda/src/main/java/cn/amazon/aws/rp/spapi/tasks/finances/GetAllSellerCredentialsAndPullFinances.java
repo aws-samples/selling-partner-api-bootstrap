@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.finances;
+package cn.amazon.aws.rp.spapi.tasks.finances;
 
 import cn.amazon.aws.rp.spapi.constants.SpApiConstants;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;

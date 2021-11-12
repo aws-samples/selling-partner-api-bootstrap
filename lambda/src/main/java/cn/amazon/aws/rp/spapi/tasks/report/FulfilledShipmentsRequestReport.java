@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.report;
+package cn.amazon.aws.rp.spapi.tasks.report;
 
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.ReportsApi;
@@ -19,7 +19,7 @@ import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
 import cn.amazon.aws.rp.spapi.enums.ReportTypeEnum;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
 import cn.amazon.aws.rp.spapi.invoker.report.FulfilledShipmentsRequestReportApiInvoker;
-import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
+import cn.amazon.aws.rp.spapi.tasks.requestlimiter.ApiProxy;
 import cn.amazon.aws.rp.spapi.utils.Helper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

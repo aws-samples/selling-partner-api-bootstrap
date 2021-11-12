@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.requestlimiter;
+package cn.amazon.aws.rp.spapi.tasks.requestlimiter;
 
 import org.junit.Ignore;
 import org.junit.Test;

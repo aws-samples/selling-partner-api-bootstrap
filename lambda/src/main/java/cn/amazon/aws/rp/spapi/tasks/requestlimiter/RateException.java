@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.requestlimiter;
+package cn.amazon.aws.rp.spapi.tasks.requestlimiter;
 
 /**
  * If SP API return 429 in HTTP status code then we have to throw this exception.

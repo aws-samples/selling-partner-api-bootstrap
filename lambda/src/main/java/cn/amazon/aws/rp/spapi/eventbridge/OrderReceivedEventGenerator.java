@@ -1,6 +1,6 @@
 package cn.amazon.aws.rp.spapi.eventbridge;
 
-import cn.amazon.aws.rp.spapi.lambda.vo.OrdersWithSeller;
+import cn.amazon.aws.rp.spapi.tasks.vo.OrdersWithSeller;
 import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.services.eventbridge.AmazonEventBridgeClient;
 import com.amazonaws.services.eventbridge.model.PutEventsRequest;

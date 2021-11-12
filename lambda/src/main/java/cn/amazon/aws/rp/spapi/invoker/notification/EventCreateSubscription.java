@@ -1,6 +1,6 @@
 package cn.amazon.aws.rp.spapi.invoker.notification;
 
-import cn.amazon.aws.rp.spapi.lambda.requestlimiter.Invokable;
+import cn.amazon.aws.rp.spapi.tasks.requestlimiter.Invokable;
 import cn.amazon.aws.rp.spapi.clients.ApiException;
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.NotificationsApi;

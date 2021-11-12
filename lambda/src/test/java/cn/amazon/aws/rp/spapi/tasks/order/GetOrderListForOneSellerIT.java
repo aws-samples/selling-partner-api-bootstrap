@@ -1,9 +1,7 @@
-package cn.amazon.aws.rp.spapi.lambda.order;
+package cn.amazon.aws.rp.spapi.tasks.order;
 
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class GetOrderListForOneSellerIT {
 

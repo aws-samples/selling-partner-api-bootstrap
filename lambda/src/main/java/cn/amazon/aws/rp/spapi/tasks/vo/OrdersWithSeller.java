@@ -1,4 +1,4 @@
-package cn.amazon.aws.rp.spapi.lambda.vo;
+package cn.amazon.aws.rp.spapi.tasks.vo;
 
 import cn.amazon.aws.rp.spapi.clients.model.OrderList;
 

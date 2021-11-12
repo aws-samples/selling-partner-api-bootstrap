@@ -6,7 +6,7 @@ import cn.amazon.aws.rp.spapi.clients.api.ReportsApi;
 import cn.amazon.aws.rp.spapi.clients.model.CreateReportResponse;
 import cn.amazon.aws.rp.spapi.clients.model.CreateReportSpecification;
 import cn.amazon.aws.rp.spapi.constants.DateConstants;
-import cn.amazon.aws.rp.spapi.lambda.requestlimiter.Invokable;
+import cn.amazon.aws.rp.spapi.tasks.requestlimiter.Invokable;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.OffsetDateTime;
 import org.threeten.bp.ZoneOffset;
