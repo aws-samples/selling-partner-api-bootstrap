@@ -8,6 +8,7 @@ import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipation;
 import cn.amazon.aws.rp.spapi.clients.model.MarketplaceParticipationList;
 import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
+import cn.amazon.aws.rp.spapi.utils.GlobalThreadPool;
 import cn.amazon.aws.rp.spapi.utils.Helper;
 import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.google.gson.Gson;
@@ -24,10 +25,16 @@ import static cn.amazon.aws.rp.spapi.utils.Helper.logInput;
  * The event bus will trigger this lambda at intervals.
  * This function will then go and retrieve all seller credentials from db and start the StepFunction to query for new orders.
  */
-public class GetAllSellerCredentialsAndPullOrders {
+public class GetAllSellerCredentialsAndPullOrders implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(GetAllSellerCredentialsAndPullOrders.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    @Override
+    public void run() {
+        logger.info("start");
+        handleRequest(null);
+    }
 
     /**
      * We can define the request as - RequestHandler<Map<String,String>, String>
@@ -37,7 +44,6 @@ public class GetAllSellerCredentialsAndPullOrders {
      * @return
      */
     public String handleRequest(String input) {
-        logger.info("start");
         logInput(logger, input, gson);
         final List<SellerCredentials> secretsVOForAllSeller = SpApiSecretDao.getSellerCredentials();
         ;
@@ -47,15 +53,9 @@ public class GetAllSellerCredentialsAndPullOrders {
                         if(Utils.isNullOrEmpty(sellerCredentials.getMarketplaces())) {
                             final ApiResponse<GetMarketplaceParticipationsResponse> marketplaceParticipations = SellersApi.getMarketplaceParticipations(sellerCredentials);
                             final MarketplaceParticipationList payloadList = marketplaceParticipations.getData().getPayload();
-//                            final List<SellerCredentials.Marketplace> mktList = payloadList.stream().map(p->{
-//                                SellerCredentials.Marketplace mkp = new SellerCredentials.Marketplace();
-//                                mkp.setId(p.getMarketplace().getId());
-//                                return mkp;
-//                            }).collect(Collectors.toList());
                             final List<Marketplace> mktList = payloadList.stream().map(MarketplaceParticipation::getMarketplace).collect(Collectors.toList());
                             sellerCredentials.setMarketplaces(mktList);
                             SpApiSecretDao.updateMarketplace(sellerCredentials);
-
                         }
                         this.startPullForSeller(sellerCredentials);
 
@@ -73,7 +73,8 @@ public class GetAllSellerCredentialsAndPullOrders {
         // Get the function name from environment which is set by CDK.
         final String funcName = Utils.getEnv("getOrderListForOneSellerFuncName");
         logger.debug("invoke with - " + gson.toJson(seller)); // FIXME! delete this.
-        Helper.invokeLambda(funcName, gson.toJson(seller), true);
-        logger.info("Lambda Started.");
+//        Helper.invokeLambda(funcName, gson.toJson(seller), true);
+        GlobalThreadPool.SCHEDULED_POOL.execute(new GetOrderListForOneSeller(gson.toJson(seller)));
+        logger.info("Already put to thread pool.");
     }
 }

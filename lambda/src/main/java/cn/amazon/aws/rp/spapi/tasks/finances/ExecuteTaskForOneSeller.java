@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class ExecuteTaskForOneSeller {
+public class ExecuteTaskForOneSeller implements Runnable{
 
     private static final Logger logger = LoggerFactory.getLogger(ExecuteTaskForOneSeller.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -38,11 +38,18 @@ public class ExecuteTaskForOneSeller {
 
     private final IFinancesDao financesDao;
     private final ISpApiTaskDao spApiTaskDao;
+    private final Object input;
 
-    public ExecuteTaskForOneSeller() {
+    public ExecuteTaskForOneSeller(Object input) {
+        this.input = input;
         financesApiHolder = new HashMap<>();
         financesDao = new FinancesDao();
         spApiTaskDao = new SpApiTaskDao();
+    }
+
+    @Override
+    public void run() {
+        handleRequest(input);
     }
 
     public Integer handleRequest(Object input) {

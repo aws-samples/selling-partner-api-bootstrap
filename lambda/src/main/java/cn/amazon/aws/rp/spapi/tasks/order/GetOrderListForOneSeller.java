@@ -28,19 +28,26 @@ import java.util.stream.Collectors;
  * EventBridge Timer -> GetAllSellerCredentialsAndPull -> here
  * The retried orders will be sent to event bus.
  */
-public class GetOrderListForOneSeller {
+public class GetOrderListForOneSeller implements Runnable{
 
     private static final Logger logger = LoggerFactory.getLogger(GetOrderListForOneSeller.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final Object input;
 
 
     private Map<String, OrdersApi> orderApiHolder;
 
     private IOrdersDao ordersDao;
 
-    public GetOrderListForOneSeller() {
+    public GetOrderListForOneSeller(Object input) {
+        this.input = input;
         orderApiHolder = new HashMap<>();
         ordersDao = new OrdersDao();
+    }
+
+    @Override
+    public void run() {
+        handleRequest(input);
     }
 
     public Integer handleRequest(Object input) {

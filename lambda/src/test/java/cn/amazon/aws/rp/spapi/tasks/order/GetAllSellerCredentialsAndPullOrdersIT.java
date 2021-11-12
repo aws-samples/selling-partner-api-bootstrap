@@ -6,7 +6,7 @@ class GetAllSellerCredentialsAndPullOrdersIT {
 
     @Test
     void handleRequest() {
-        GetAllSellerCredentialsAndPullOrders getAllSellerCredentialsAndPullOrders = new GetAllSellerCredentialsAndPullOrders();
-        getAllSellerCredentialsAndPullOrders.handleRequest(null,null);
+//        GetAllSellerCredentialsAndPullOrders getAllSellerCredentialsAndPullOrders = new GetAllSellerCredentialsAndPullOrders();
+//        getAllSellerCredentialsAndPullOrders.handleRequest(null,null);
     }
 }
