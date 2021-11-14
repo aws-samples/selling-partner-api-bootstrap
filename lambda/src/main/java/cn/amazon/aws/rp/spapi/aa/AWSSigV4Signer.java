@@ -2,6 +2,7 @@ package cn.amazon.aws.rp.spapi.aa;
 
 
 
+import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiSecretDao;
 import cn.amazon.aws.rp.spapi.utils.Utils;
 import com.amazonaws.SignableRequest;
 import com.amazonaws.auth.*;
@@ -10,6 +11,8 @@ import com.squareup.okhttp.Request;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 
@@ -18,6 +21,8 @@ import java.lang.reflect.Field;
  */
 public class AWSSigV4Signer {
     private static final String SERVICE_NAME = "execute-api";
+
+    private static final Logger logger = LoggerFactory.getLogger(AWSSigV4Signer.class);
 
     @Setter(AccessLevel.PACKAGE)
     @Getter(AccessLevel.PACKAGE)
@@ -68,7 +73,7 @@ public class AWSSigV4Signer {
         aws4Signer.setRegionName(region);
 
         String roleArn = Utils.getEnv("Role");
-
+        logger.info(">>>  role is >>> {}", roleArn);
 
         AWSCredentialsProvider awsCredentialsProvider = DefaultAWSCredentialsProviderChain.getInstance();
         AWSCredentialsProvider assumeCredentialsProvider =

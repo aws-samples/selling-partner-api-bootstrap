@@ -4,7 +4,7 @@ import cn.amazon.aws.rp.spapi.dynamodb.entity.SellerCredentials;
 import org.junit.jupiter.api.Test;
 
 //@Ignore
-class ExecuteTaskForOneSellerIT {
+class ExecuteFinanceTaskForOneSellerIT {
 
     @Test
     void handleRequest() {

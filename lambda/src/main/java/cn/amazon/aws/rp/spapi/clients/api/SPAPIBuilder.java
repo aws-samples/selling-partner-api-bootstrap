@@ -86,6 +86,7 @@ public abstract class SPAPIBuilder<T> {
             throw new RuntimeException("Endpoint not set");
         }
 
+        logger.info("Going to use credential: {}", gson.toJson(sellerCredentials));
         AWSSigV4Signer awsSigV4Signer = new AWSSigV4Signer(sellerCredentials.getRegion());
 
 //        try {

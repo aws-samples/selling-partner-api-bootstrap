@@ -93,6 +93,7 @@ public class SpApiSecretDao implements ISpApiSecretDao {
     public static String getSellerSecretsTableName() {
         // Update the table name from environment. It is expected to be set by CDK script on Lambda.
         final String tableName = Utils.getEnv("DYNAMODB_SECRETS_TABLE");
+        logger.info("dynamodb secrets table name is {}", tableName);
         if (tableName != null) {
             TABLE_NAME = tableName;
         }

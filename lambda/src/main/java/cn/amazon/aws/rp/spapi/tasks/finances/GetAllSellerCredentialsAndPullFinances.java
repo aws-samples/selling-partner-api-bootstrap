@@ -50,8 +50,8 @@ public class GetAllSellerCredentialsAndPullFinances implements Runnable{
 			// Get the function name from environment which is set by CDK.
 			final String funcName = Utils.getEnv("getFinancesListForOneSellerFuncName");
 //			Helper.invokeLambda(funcName, gson.toJson(credentials), true);
-			GlobalThreadPool.SCHEDULED_POOL.execute(new ExecuteTaskForOneSeller(gson.toJson(credentials)));
-			logger.info("Lambda Started.");
+			GlobalThreadPool.SCHEDULED_POOL.execute(new ExecuteFinanceTaskForOneSeller(credentials));
+			logger.info("Already put to thread pool");
 		});
 		return SpApiConstants.SUCCESS;
 	}

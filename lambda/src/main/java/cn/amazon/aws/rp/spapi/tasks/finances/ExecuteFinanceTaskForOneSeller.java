@@ -29,45 +29,52 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class ExecuteTaskForOneSeller implements Runnable{
+public class ExecuteFinanceTaskForOneSeller implements Runnable{
 
-    private static final Logger logger = LoggerFactory.getLogger(ExecuteTaskForOneSeller.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExecuteFinanceTaskForOneSeller.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final Map<String, FinancesApi> financesApiHolder;
     private static final IdWorker idWorker = new IdWorker();
 
     private final IFinancesDao financesDao;
     private final ISpApiTaskDao spApiTaskDao;
-    private final Object input;
+    private final SellerCredentials input;
 
-    public ExecuteTaskForOneSeller(Object input) {
+    public ExecuteFinanceTaskForOneSeller(SellerCredentials input) {
+        logger.info("init enter");
         this.input = input;
         financesApiHolder = new HashMap<>();
         financesDao = new FinancesDao();
         spApiTaskDao = new SpApiTaskDao();
+        logger.info("init done");
     }
 
     @Override
     public void run() {
+        logger.info("run enter");
         handleRequest(input);
+        logger.info("run done");
     }
 
-    public Integer handleRequest(Object input) {
+    public Integer handleRequest(SellerCredentials sellerCredentials) {
 	    String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
-	    Helper.logInput(logger, jsonSellerSecrets, gson);
-	    SellerCredentials sellerCredentials = gson.fromJson(jsonSellerSecrets, SellerCredentials.class);
+//	    Helper.logInput(logger, jsonSellerSecrets, gson);
+        logger.info("1");
 	    executeTask(sellerCredentials);
+        logger.info("3");
 	    return SpApiConstants.CODE_200;
     }
 
 
     public void executeTask(SellerCredentials sellerCredentials) {
+        logger.info("executeTask start");
         try {
 	        //get task
 	        final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
 	        List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerTaskKey);
-	        if (spApiTaskList.isEmpty()) {
-                SpApiTask task = new SpApiTask();
+            SpApiTask task = null;
+            if (spApiTaskList.isEmpty()) {
+                task = new SpApiTask();
                 task.setSellerKey(sellerTaskKey);
                 task.setSellerId(sellerCredentials.getSeller_id());
                 task.setStartTime("2020-08-01 00:00:00");
@@ -76,9 +83,10 @@ public class ExecuteTaskForOneSeller implements Runnable{
                 task.setTaskName(TaskConstants.LIST_FINANCIAL_EVENTS);
                 task.setExecuteStatus(StatusEnum.INIT.getStatus());
                 spApiTaskDao.addTask(task);
-                spApiTaskList.add(task);
-	        }
-	        SpApiTask apiTask = spApiTaskList.stream().findFirst().get();
+            } else {
+                task = spApiTaskList.get(0);
+            }
+	        SpApiTask apiTask = task;
 	        logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
 	        //check time
 	        long diff = DateUtil.betweenTwoTime(DateUtil.toUtc(DateUtil.getLocalDateTime(apiTask.getEndTime())), DateUtil.toUtc(LocalDateTime.now()), ChronoUnit.HOURS);
