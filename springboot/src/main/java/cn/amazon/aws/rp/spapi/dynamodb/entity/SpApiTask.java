@@ -32,6 +32,8 @@ public class SpApiTask implements Serializable {
 	private String startTime;
 	@DynamoDBAttribute
 	private String endTime;
+	@DynamoDBAttribute
+	private String nextToken;
 
 	public String getSellerId() {
 		return sellerId;
@@ -87,5 +89,13 @@ public class SpApiTask implements Serializable {
 
 	public void setSellerKey(String sellerKey) {
 		this.sellerKey = sellerKey;
+	}
+
+	public String getNextToken() {
+		return nextToken;
+	}
+
+	public void setNextToken(String nextToken) {
+		this.nextToken = nextToken;
 	}
 }

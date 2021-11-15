@@ -41,20 +41,25 @@ public class RateLimiterRedis {
 
         // Ensure the limiter is created for this name.
         ensureLimiterExist(limiterName, rate, interval);
-        logger.info("Get limiter");
+        logger.info("Get limiter- " + limiterName);
         RRateLimiter limiter = redisson.getRateLimiter(limiterName);
-        logger.info("Acquiring permit");
+        logger.info(">> Acquiring permit - {}", limiter.getConfig().getRateInterval());
         limiter.acquire();
-        logger.info("Acquired permit");
+        logger.info("<< Acquired permit at interval - " + limiter.getConfig().getRateInterval());
     }
 
     public static void updateRateLimiter(String limiterName, Integer rate, Integer interval) {
         ensureLimiterExist(limiterName, rate, interval);
 
         RRateLimiter limiter = redisson.getRateLimiter(limiterName);
-
-        logger.info(String.format("Update rate [%s], interval [%s] ", rate, interval));
-        limiter.setRate(RateType.OVERALL, rate, interval, RateIntervalUnit.SECONDS);
+        final RateLimiterConfig rrConfig = limiter.getConfig();
+        logger.info("existing {}, to be {}", rrConfig.getRateInterval(), (interval - 40L)*1000L);
+        if(((long) interval - 40L) * 1000L != rrConfig.getRateInterval()){
+            logger.info(String.format("Update rate [%s], interval [%s] ", rate, interval));
+            limiter.setRate(RateType.OVERALL, (long) rate, (long) interval - 40L, RateIntervalUnit.SECONDS);
+        }else{
+            logger.info("SKIP - Interval doesn't change, so don't update it.");
+        }
     }
 
     // *************** Helpers ***************************

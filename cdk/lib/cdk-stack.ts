@@ -16,8 +16,8 @@ import { OrderStack } from './order-stack';
 
 
 // TODO rename the class as SpApi
-export class CdkStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, spapi_role_arn: string, props?: cdk.StackProps) {
+export class SpApi extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, spapi_role_arn: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     var spapiRole = spapi_role_arn;
@@ -25,12 +25,12 @@ export class CdkStack extends cdk.Stack {
 
     const codeZip = path.join(__dirname, '../../lambda/build/distributions/lambda.zip');
 
-    const ssm_seller_central_app_credentials = ssm.StringParameter.fromSecureStringParameterAttributes(this,"seller_central_app_credentials",{ parameterName:seller_central_app_credentials, version:1});
+    const ssm_seller_central_app_credentials = ssm.StringParameter.fromSecureStringParameterAttributes(this, "seller_central_app_credentials", { parameterName: seller_central_app_credentials, version: 1 });
 
     if (!spapiRole) {
       spapiRole = this.initCredential();
     }
-    
+
     // The code that defines your stack goes here
 
     const { lambdaSG, vpc, redisCluster } = this.initInfra();
@@ -38,43 +38,9 @@ export class CdkStack extends cdk.Stack {
     // Create EventBridge
     const eventBus = new events.EventBus(this, "sp-api", { eventBusName: "sp-api" });
 
-    // const getOneNewOrderFunc = new lambda.Function(this, "GetOneNewOrder", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambda.Code.fromAsset(codeZip),
-    //   handler: 'cn.amazon.aws.rp.spapi.lambda.order.GetOneNewOrder',
-    //   securityGroups: [lambdaSG],
-    //   vpc,
-    //   environment: {
-    //     REDIS_URL: redisCluster.attrRedisEndpointAddress,
-    //     EVENT_BUS_NAME: eventBus.eventBusName
-    //   },
-    //   timeout: cdk.Duration.seconds(900), // We may retry on throttling
-    //   memorySize: 1024,
-    //   tracing: lambda.Tracing.ACTIVE,
-    //   retryAttempts: 0 // Retry should be controled by request limiter.
-    // });
-
-    // EventBridge rule to route newOrder
-    // const eventBusNewOrderRule = new events.Rule(this, "newOrderRule", {
-    //   description: "Send new order to Lambda.",
-    //   enabled: true,
-    //   eventBus: eventBus,
-    //   eventPattern: {
-    //     source: ["com.aws.rapidprototyping.spapi"],
-    //     // This filed will carry seller_id used to get seller secretes from dynamodb.
-    //     // E.G newOrder||seller_jim
-    //     detailType: ["{\"prefix\":\"newOrder||\"}"]
-    //   }
-    // });
-
-    // dirty fix: https://github.com/aws-samples/aws-cdk-examples/issues/89#issuecomment-526758938 
-    // const eventTargets = require("@aws-cdk/aws-events-targets");
-    // eventBusNewOrderRule.addTarget(new eventTargets.LambdaFunction(getOneNewOrderFunc));
-    
-
     // Dynamodb table
     const secrtesTableName = 'spapi-secrets';
-   
+
     const secretsTalbe = new Table(this, 'secrtesTable', {
       tableName: secrtesTableName,
       partitionKey: { name: 'seller_id', type: AttributeType.STRING },
@@ -83,15 +49,26 @@ export class CdkStack extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST
     });
 
-    const parameter =  {
-      codeZip, lambdaSG, vpc, redisCluster, secrtesTableName, eventBus, seller_central_app_credentials, spapiRole, ssm_seller_central_app_credentials, secretsTalbe
-    }; 
+    const apiTaskTableName = 'sp_api_task';
 
-    const orderStack =  new OrderStack(scope, parameter);
+    const apiTaskTable = new Table(this, 'sp_api_task', {
+        tableName: apiTaskTableName,
+        partitionKey: { name: 'sellerKey', type: AttributeType.STRING },
+        sortKey: { name: "sellerId", type: AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        // For dev/test purpose
+        billingMode: BillingMode.PAY_PER_REQUEST
+    });
 
-    const financesStack = new FinancesStack(scope, parameter);
-    
-    
+    const parameter = {
+      codeZip, lambdaSG, vpc, redisCluster, secrtesTableName,
+       eventBus, seller_central_app_credentials, spapiRole, 
+       ssm_seller_central_app_credentials, secretsTalbe, apiTaskTable
+    };
+
+    const orderStack = new OrderStack(this, parameter);
+
+    const financesStack = new FinancesStack(this, parameter);
 
     // Subscribe the event
     const spapiEventQueue = new sqs.Queue(this, "SpApiEventQueue", {
@@ -99,7 +76,10 @@ export class CdkStack extends cdk.Stack {
     });
 
     // The principal is defined by SP API - it will put event to the queue.
-    spapiEventQueue.grantSendMessages(new iam.AccountPrincipal('437568002678'))
+    // TODO for China Region we need to disable the event subscription 
+    //      and it should controlled by a variable.
+    
+    // spapiEventQueue.grantSendMessages(new iam.AccountPrincipal('437568002678'))
 
     const logOnlyFunc = new lambda.Function(this, "LogOnly", {
       runtime: lambda.Runtime.JAVA_8,
@@ -133,30 +113,30 @@ export class CdkStack extends cdk.Stack {
     });
     secretsTalbe.grantReadData(eventSubscriptionFunc)
 
-    // add api gateway for lambda
-    const api = new apigw.RestApi(this, "sp-api-subscription");
+    // // add api gateway for lambda
+    // const api = new apigw.RestApi(this, "sp-api-subscription");
 
-    // This is used to trigger the SP-API event subscription, in a complete project this lambda should be triggered by seller register event.
-    const integration = new apigw.LambdaIntegration(eventSubscriptionFunc);
-    api.root.addMethod("GET", integration);
+    // // This is used to trigger the SP-API event subscription, in a complete project this lambda should be triggered by seller register event.
+    // const integration = new apigw.LambdaIntegration(eventSubscriptionFunc);
+    // api.root.addMethod("GET", integration);
 
   }
-
- 
 
   private initInfra() {
     const vpc = new ec2.Vpc(this, "SpApiVpc", {
       cidr: '10.233.0.0/16',
       natGateways: 1,
+      // Allow 4K IP address in each subnet.
       subnetConfiguration: [{
-        cidrMask: 22,
+        cidrMask: 20,
         name: 'private',
         subnetType: ec2.SubnetType.PRIVATE
       }, {
-        cidrMask: 22,
+        cidrMask: 20,
         name: 'public',
         subnetType: ec2.SubnetType.PUBLIC
       }]
+      // Consider create Isolated subnet for Workspace.
     });
 
 
@@ -211,3 +191,7 @@ export class CdkStack extends cdk.Stack {
     return spapi_role.roleArn;
   }
 }
+
+//const app = new cdk.App();
+//new SpApi(app, "spapi");
+//app.synth();

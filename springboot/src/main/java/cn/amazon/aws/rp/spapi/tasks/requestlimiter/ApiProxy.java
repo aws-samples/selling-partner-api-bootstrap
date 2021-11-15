@@ -52,14 +52,21 @@ public class ApiProxy<R> {
             acquireToken(limiterName);
 
             logger.info("request parameters: " + gson.toJson(input));
-            result = ivk.invoke(input);
+            try {
+                result = ivk.invoke(input);
+            } catch (ApiException e) {
+                if (result == null) {
+                    throw e;
+                } // Retry
+                else if (result.getStatusCode() == OVER_REQUEST_CODE) {
+                    logger.warn("SERVER SIDE LIMIT: going to retry due to request too frequently.", e);
+                    result = retryInvk(input, sellerName);
+                }else{
+                    throw e;
+                }
+            }
             logger.info("result is: " + gson.toJson(result)); // TODO remove it.
 
-            // Retry
-            if (result.getStatusCode() == OVER_REQUEST_CODE) {
-                logger.warn("SERVER SIDE LIMIT: going to retry due to request too frequently.");
-                result = retryInvk(input, sellerName);
-            }
 
             // Everything is good here, so we reset delay
             delayTime = 0.0;
@@ -74,7 +81,7 @@ public class ApiProxy<R> {
                 }
             }
         } catch (ApiException throwable) {
-            logger.error("Other error found in API Call ", throwable);
+            logger.error("Other error found in API Call {} - {}", throwable, throwable.getMessage());
             logger.error("Details: " + gson.toJson(throwable));
             throw throwable;
         }

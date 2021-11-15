@@ -3,27 +3,17 @@ import * as events from '@aws-cdk/aws-events';
 import * as iam from '@aws-cdk/aws-iam';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
-import { commonParameter } from './commonParameter';
+import { CommonParameter } from './commonParameter';
 
 
-export class OrderStack extends cdk.Stack {
+export class OrderStack extends cdk.Construct{
 
     getOrderListForOneSellerFunc: lambda.Function;
 
-    constructor(scope: cdk.Construct, parameter: commonParameter, props?: cdk.StackProps) {
-        super(scope, "OrderStack", props);
+    constructor(scope: cdk.Construct, parameter: CommonParameter, props?: cdk.StackProps) {
+        super(scope, "OrderStack");
 
         const ordersTableName = 'amz_sp_api_orders';
-
-
-        // EventBridge rule to set a timer in order to peridically pull for new order 
-        // Scheduled rules are supported only on the default event bus. 
-        const eventBusPullOrderTimer = new events.Rule(this, "pullOrderTimer", {
-            description: "create a timer to trigger lambda function",
-            enabled: true,
-            schedule: events.Schedule.rate(cdk.Duration.minutes(1))
-        });
-
 
         const ordersTalbe = new Table(this, 'amz_sp_api_orders', {
             tableName: ordersTableName,
@@ -34,8 +24,17 @@ export class OrderStack extends cdk.Stack {
             billingMode: BillingMode.PAY_PER_REQUEST
         });
 
+        // EventBridge rule to set a timer in order to peridically pull for new order 
+        // Scheduled rules are supported only on the default event bus. 
+        const eventBusPullOrderTimer = new events.Rule(this, "pullOrderTimer", {
+            description: "create a timer to trigger lambda function",
+            enabled: true,
+            schedule: events.Schedule.rate(cdk.Duration.minutes(2))
+        });
+
         //For order getData
         this.getOrderListForOneSellerFunc = new lambda.Function(this, "GetOrderListForOneSeller", {
+            functionName: "GetOrderListForOneSeller",
             runtime: lambda.Runtime.JAVA_8,
             code: lambda.Code.fromAsset(parameter.codeZip),
             handler: 'cn.amazon.aws.rp.spapi.lambda.order.GetOrderListForOneSeller',
@@ -47,13 +46,17 @@ export class OrderStack extends cdk.Stack {
                 DYNAMODB_ORDERS_TABLE: ordersTableName,
                 EVENT_BUS_NAME: parameter.eventBus.eventBusName,
                 SELLER_CENTRAL_APP_CREDENTIALS: parameter.seller_central_app_credentials,
+                getOrderListForOneSellerFuncName: "GetOrderListForOneSeller",
                 Role: parameter.spapiRole
             },
-            timeout: cdk.Duration.seconds(100),
+            timeout: cdk.Duration.seconds(900),
             memorySize: 1024,
             tracing: lambda.Tracing.ACTIVE,
             retryAttempts: 0 // Retry should be controled by request limiter.
         });
+
+        // FIXME - Create a policy to allow this function to invoke Lambda. 
+        // this.getOrderListForOneSellerFunc.grantInvoke(this.getOrderListForOneSellerFunc);
         ordersTalbe.grantReadWriteData(this.getOrderListForOneSellerFunc);
         events.EventBus.grantPutEvents(this.getOrderListForOneSellerFunc);
         this.getOrderListForOneSellerFunc.addToRolePolicy(new iam.PolicyStatement({
@@ -61,7 +64,7 @@ export class OrderStack extends cdk.Stack {
             actions: ['sts:AssumeRole'],
         }));
         parameter.ssm_seller_central_app_credentials.grantRead(this.getOrderListForOneSellerFunc);
-
+        parameter.apiTaskTable.grantReadWriteData(this.getOrderListForOneSellerFunc);
 
         //For order executeTask
         const getAllSellerCredentialsAndPullFunc = new lambda.Function(this, "GetAllSellerCredentialsAndPullOrders", {

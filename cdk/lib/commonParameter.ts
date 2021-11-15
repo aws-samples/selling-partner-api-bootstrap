@@ -5,7 +5,7 @@ import * as events from '@aws-cdk/aws-events';
 import * as ssm from '@aws-cdk/aws-ssm';
 
 
-export interface commonParameter {
+export interface CommonParameter {
     readonly codeZip: string;
     readonly lambdaSG: ec2.SecurityGroup;
     readonly vpc: ec2.Vpc;
@@ -15,7 +15,8 @@ export interface commonParameter {
     readonly seller_central_app_credentials: string;
     readonly spapiRole: string;
     readonly ssm_seller_central_app_credentials: ssm.IStringParameter
-    readonly secretsTalbe: Table
+    readonly secretsTalbe: Table;
+    readonly apiTaskTable: Table
 }
 
 

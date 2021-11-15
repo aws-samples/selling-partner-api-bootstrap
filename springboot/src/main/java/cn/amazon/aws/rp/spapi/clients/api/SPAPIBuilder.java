@@ -28,13 +28,17 @@ public abstract class SPAPIBuilder<T> {
     private static final LWAAccessTokenCacheImpl lwaAccessTokenCache = new LWAAccessTokenCacheImpl();
 
     protected ApiClient apiClient;
-    static final LWACredentials lwaCredentials;
+    static LWACredentials lwaCredentials = null;
     static {
-        AWSSimpleSystemsManagement simpleSystemsManagementClient = AWSSimpleSystemsManagementClientBuilder.standard().build();
-        String lwaCredentialsJson = simpleSystemsManagementClient.getParameter(new GetParameterRequest()
-                .withName(Utils.getEnv("SELLER_CENTRAL_APP_CREDENTIALS","seller_central_app_credentials")).
-                        withWithDecryption(true)).getParameter().getValue();
-        lwaCredentials = gson.fromJson(lwaCredentialsJson, LWACredentials.class);
+        try {
+            AWSSimpleSystemsManagement simpleSystemsManagementClient = AWSSimpleSystemsManagementClientBuilder.standard().build();
+            String lwaCredentialsJson = simpleSystemsManagementClient.getParameter(new GetParameterRequest()
+                    .withName(Utils.getEnv("SELLER_CENTRAL_APP_CREDENTIALS","seller_central_app_credentials")).
+                            withWithDecryption(true)).getParameter().getValue();
+            lwaCredentials = gson.fromJson(lwaCredentialsJson, LWACredentials.class);
+        } catch (Exception e) {
+           logger.error("Cannot init API builder! Check your parameter store values.", e);
+        }
 
     }
 

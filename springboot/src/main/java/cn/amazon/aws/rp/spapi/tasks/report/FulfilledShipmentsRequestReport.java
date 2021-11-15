@@ -67,7 +67,7 @@ public String handleRequest(Object input) {
 			try {
 				final String sellerKey = credentials.getSeller_id() + "_" + StatusEnum.INIT.getStatus() + "_" + TaskConstants.FULFILLED_SHIPMENT_REQUEST_REPORT;
 				//get task
-				List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerKey);
+				List<SpApiTask> spApiTaskList = spApiTaskDao.getTaskList(sellerKey);
 				if (spApiTaskList.isEmpty()) {
 					return;
 				}

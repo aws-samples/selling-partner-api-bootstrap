@@ -2,6 +2,9 @@ package cn.amazon.aws.rp.spapi.tasks.finances;
 
 import cn.amazon.aws.rp.spapi.clients.ApiResponse;
 import cn.amazon.aws.rp.spapi.clients.api.FinancesApi;
+import cn.amazon.aws.rp.spapi.clients.api.SellersApi;
+import cn.amazon.aws.rp.spapi.clients.model.*;
+import cn.amazon.aws.rp.spapi.clients.model.*;
 import cn.amazon.aws.rp.spapi.clients.model.FinancialEvents;
 import cn.amazon.aws.rp.spapi.clients.model.ListFinancialEventsResponse;
 import cn.amazon.aws.rp.spapi.clients.model.Marketplace;
@@ -17,6 +20,9 @@ import cn.amazon.aws.rp.spapi.dynamodb.impl.SpApiTaskDao;
 import cn.amazon.aws.rp.spapi.enums.DateType;
 import cn.amazon.aws.rp.spapi.enums.StatusEnum;
 import cn.amazon.aws.rp.spapi.invoker.finances.FinancesEventsApiInvoker;
+import cn.amazon.aws.rp.spapi.invoker.seller.SellerGetMarketParticipation;
+import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
+import cn.amazon.aws.rp.spapi.lambda.requestlimiter.ApiProxy;
 import cn.amazon.aws.rp.spapi.tasks.requestlimiter.ApiProxy;
 import cn.amazon.aws.rp.spapi.utils.DateUtil;
 import cn.amazon.aws.rp.spapi.utils.Helper;
@@ -57,22 +63,22 @@ public class ExecuteFinanceTaskForOneSeller implements Runnable{
     }
 
     public Integer handleRequest(SellerCredentials sellerCredentials) {
-	    String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
-//	    Helper.logInput(logger, jsonSellerSecrets, gson);
-        logger.info("1");
-	    executeTask(sellerCredentials);
-        logger.info("3");
-	    return SpApiConstants.CODE_200;
+        String jsonSellerSecrets = input != null ? gson.toJson(input) : "{}";
+        Helper.logInput(logger, jsonSellerSecrets, context, gson);
+        SellerCredentials sellerCredentials = gson.fromJson(jsonSellerSecrets, SellerCredentials.class);
+        executeTask(sellerCredentials);
+        return SpApiConstants.CODE_200;
+ 
     }
 
 
     public void executeTask(SellerCredentials sellerCredentials) {
         logger.info("executeTask start");
         try {
-	        //get task
-	        final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_EVENTS;
-	        List<SpApiTask> spApiTaskList = spApiTaskDao.getTask(sellerTaskKey);
-            SpApiTask task = null;
+            //get task
+            final String sellerTaskKey = sellerCredentials.getSeller_id() + "_" + TaskConstants.LIST_FINANCIAL_TASKS;
+            List<SpApiTask> spApiTaskList = spApiTaskDao.getTaskList(sellerTaskKey);
+            // If there is no any task, then create the init task.
             if (spApiTaskList.isEmpty()) {
                 task = new SpApiTask();
                 task.setSellerKey(sellerTaskKey);
@@ -80,31 +86,32 @@ public class ExecuteFinanceTaskForOneSeller implements Runnable{
                 task.setStartTime("2020-08-01 00:00:00");
                 task.setEndTime("2020-08-02 00:00:00");
                 task.setTaskId(idWorker.nextId());
-                task.setTaskName(TaskConstants.LIST_FINANCIAL_EVENTS);
+                task.setTaskName(TaskConstants.LIST_FINANCIAL_TASKS);
                 task.setExecuteStatus(StatusEnum.INIT.getStatus());
                 spApiTaskDao.addTask(task);
-            } else {
-                task = spApiTaskList.get(0);
+                
             }
-	        SpApiTask apiTask = task;
-	        logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
-	        //check time
-	        long diff = DateUtil.betweenTwoTime(DateUtil.toUtc(DateUtil.getLocalDateTime(apiTask.getEndTime())), DateUtil.toUtc(LocalDateTime.now()), ChronoUnit.HOURS);
-	        if (diff < 1) {
-		        return;
-	        }
-	        if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
-		        return;
-	        }
-
+            SpApiTask apiTask = task;
+            logger.info("sellerId:{} queryTime:{}-{}", apiTask.getSellerId(), apiTask.getStartTime(), apiTask.getEndTime());
+            // check time - Current task ending in the same hour of now -> return.
+            long diff = DateUtil.betweenTwoTime(DateUtil.toUtc(DateUtil.getLocalDateTime(apiTask.getEndTime())), DateUtil.toUtc(LocalDateTime.now()), ChronoUnit.HOURS);
+            if (diff < 1) {
+                return;
+            }
+            // Skip if current task is in working status.
+            if (StatusEnum.WORKING.getStatus().intValue() == apiTask.getExecuteStatus().intValue()) {
+                return;
+            }
+            // Sync execution.
             sellerCredentials.getMarketplaces().forEach(marketplace -> {
-		        requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
-	        });
+                //update task status
+                spApiTaskDao.updateTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
+                // execute the task
+                requestFinancesForOneMkt(marketplace, sellerCredentials, apiTask);
+            });
 
-            //update task
-            spApiTaskDao.upTaskStatus(sellerTaskKey, sellerCredentials.getSeller_id(), StatusEnum.WORKING.getStatus());
-	        //add task
-	        spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
+            //add a new task for the next 2 days.
+            spApiTaskDao.addNewTask(apiTask, DateType.DAYS.name(), 2L);
         } catch (Throwable throwable) {
             logger.error("Api call failed", throwable);
         }
