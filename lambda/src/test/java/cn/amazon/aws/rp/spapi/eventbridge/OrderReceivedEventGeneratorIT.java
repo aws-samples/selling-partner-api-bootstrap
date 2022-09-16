@@ -15,3 +15,4 @@ public class OrderReceivedEventGeneratorIT {
         orderReceivedEventGenerator.put();
     }
 }
+
