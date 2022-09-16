@@ -23,7 +23,7 @@ A Chinese version SP-API workshop can be found [here](https://www.spapi.org.cn/ 
 ## Contribute
 Pull requests and issue reports are welcome.
 
-## Security
+## Security 
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
