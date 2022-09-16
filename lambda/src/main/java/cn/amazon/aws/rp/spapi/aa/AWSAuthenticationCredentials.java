@@ -27,4 +27,7 @@ public class AWSAuthenticationCredentials {
      */
     @NonNull
     private String region;
+
+
+
 }
