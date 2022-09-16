@@ -20,5 +20,6 @@ class CatalogApiIT {
         CatalogApi catalogApi = CatalogApi.buildCatalogApi(credentials);
         GetCatalogItemResponse getCatalogItemResponse = catalogApi.getCatalogItem("ATVPDKIKX0DER","B0892F2531");
         System.out.println(getCatalogItemResponse.getPayload());
+        System.out.println(getCatalogItemResponse.hashCode());
     }
 }
